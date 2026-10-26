@@ -134,51 +134,7 @@ HELP_DESC = {
 "mutelist":"ดูใครโดนล็อคไมค์ในห้อง",
 "slowmodeall":"เปิดพิมพ์ช้าทุกห้อง",
 "clearallvc":"ล้างห้องเสียง",
-"mutecheck":"เช็คโดนล็อคไมค์ไหม",
-"activity":"ดูเล่นเกมอะไร",
-"lastseen":"ดูออนล่าสุด",
-"whois":"ดูข้อมูลสมาชิกละเอียด",
-"removeroleall":"ถอดยศคนในห้องเสียง",
-"voiceall":"ดูใครอยู่ในห้องเสียง",
-"vcinvite":"ดึงคนเข้าห้องเสียง",
-"setnick":"เปลี่ยนชื่อคนนั้น ล็อคเปลี่ยนกลับไม่ได้",
-"roleall":"ดูยศทุกคนในเซิร์ฟ",
-"resetnick":"ล้างชื่อคนในห้องเสียงทุกคน",
-"nickall":"เปลี่ยนชื่อคนในห้องเสียงทุกคน",
-"voicedeafen":"ปิดหูฟังชั่วคราว",
-"voicemute":"ปิดไมค์ชั่วคราว",
-"vckick":"เตะคนออกจากห้องเสียง",
-"voicetime":"ดูเวลาอยู่ห้องเสียง",
-"unmutehistory":"ดูประวัติปิดไมค์ทั้งหมด",
-"kickall":"เตะทุกคนในห้องเสียง",
-"editsnipe":"ดูข้อความที่แก้ไป",
-"snipe":"ดูข้อความที่ลบไป",
-"setprefix":"เปลี่ยนคำนำหน้า",
-"purgebot":"ลบแค่ข้อความบอท",
-"clearall":"ลบข้อความทั้งหมด",
-"status":"เช็คบอทออนไลน์ไหม",
-"restart":"รีบอทใหม่",
-"shutdown":"ปิดบอท",
-"uptime":"ดูว่าบอทออนกี่ชม",
-"meme":"ส่งรูปตลก",
-"rps":"เป่ายิ้งฉุบ",
-"dice":"ทอยลูกเต๋า",
-"coinflip":"โยนเหรียญ",
-"ball8":"ถามลูกบอล",
-"unjail":"ปล่อยคน",
-"jail":"ขังคน",
-"mutehistory":"ดูประวัติปิดไมค์",
-"clearwarn":"ล้างประวัติเตือน",
-"warnlist":"ดูประวัติเตือน",
-"vcshow":"โชว์ห้องเสียง",
-"vchide":"ซ่อนห้องเสียง",
-"voicelimit":"จำกัดคนเข้าห้องเสียง",
-"voicename":"เปลี่ยนชื่อห้องเสียง",
-"setlog":"ตั้งห้อง Log",
-"antiraid":"กันคนเข้าเยอะๆ",
-"autorole":"ใส่ยศคนเข้าใหม่เอง",
-"welcome":"ตั้งห้องต้อนรับ",
-"backup":"สำรองเซิร์ฟ",
+"mutecheck":"เช็คโดนล็อคไมค์ไหม"
 }
 
 # --- ฟังก์ชันช่วย ---
@@ -541,25 +497,91 @@ async def ping(ctx):
 @bot.command(name="help")
 async def help_cmd(ctx):
     if not is_allowed(ctx): await deny(ctx); return
-    # แบบข้อความธรรมดา ไม่ใช้ Embed เพราะ Embed มันยาวเกิน 1024 ตัวอักษรแล้วพัง 400
-    total = len(HELP_DESC)
-    # ส่งเป็น 3 ข้อความสั้นๆ
-    await ctx.send(f"📋 **คำสั่งทั้งหมด - Bot Manage (rreqzn2l) - แอดมินเท่านั้น**\nทั้งหมด {total} คำสั่ง | สมาชิกใช้ไม่ได้")
-    # กลุ่มที่ 1
-    txt1 = "🔇 **ปิดไมค์/หูฟัง**\n"
-    for c in ["vmute","vunmute","vdeafen","vundeafen","muteall","unmuteall","deafenall","undeafenall","lockall","unlockall","lockmic","unlockmic","lockdeafen","unlockdeafen","mutelist","mutecheck"]:
-        if c in HELP_DESC: txt1 += f"!{c} - {HELP_DESC[c]}\n"
-    await ctx.send(txt1)
-    txt2 = "🔨 **แบน/เตะ/จัดการคน**\n"
-    for c in ["ban","kick","timeout","warn","clear","purge","nuke","massban","listbans","unbanall","nick","addrole","removerole","userinfo","myinfo","serverinfo","members"]:
-        if c in HELP_DESC: txt2 += f"!{c} - {HELP_DESC[c]}\n"
-    await ctx.send(txt2)
-    # กลุ่มที่เหลือ - ส่งทั้งหมดแบบสั้น
-    rest = "📢 **คำสั่งอื่นๆ ทั้งหมด**\n"
-    for k,v in HELP_DESC.items():
-        if k not in txt1 and k not in txt2:
-            rest += f"!{k} "
-    await ctx.send(rest[:1900])
+    # แบบสวยๆ แบบในรูปที่พี่ชอบ - ส่งเป็น 1 ข้อความพอดี 1893 ตัวอักษร
+    msg = """📋 คำสั่งทั้งหมด - Bot Manage (rreqzn2l) - แอดมินเท่านั้น
+ทั้งหมด 69 คำสั่ง | สมาชิกใช้ไม่ได้
+
+🔇 ปิดไมค์/หูฟัง (ล็อค เปิดเองไม่ได้)
+!vmute - ปิดไมค์คนเดียว (ล็อค เปิดเองไม่ได้)
+!vunmute - เปิดไมค์คนเดียว
+!vdeafen - ปิดหูฟังคนเดียว (ล็อค เปิดเองไม่ได้)
+!vundeafen - เปิดหูฟังคนเดียว
+!muteall - ปิดไมค์ทุกคน (ล็อค เปิดเองไม่ได้)
+!unmuteall - เปิดไมค์ทุกคน
+!deafenall - ปิดหูฟังทุกคน (ล็อค เปิดเองไม่ได้)
+!undeafenall - เปิดหูฟังทุกคน
+!lockall - ปิดทั้งไมค์+หูฟังทุกคน
+!unlockall - เปิดทั้งไมค์+หูฟังทุกคน
+!lockmic - ล็อคไมค์อย่างเดียว ไม่ล็อคห้อง
+!unlockmic - ปลดล็อคไมค์
+!lockdeafen - ล็อคหูฟังอย่างเดียว
+!unlockdeafen - ปลดล็อคหูฟัง
+!tempMute - ปิดไมค์ชั่วคราวตามนาที
+!mutelist - ดูใครโดนล็อคไมค์ในห้อง
+!mutecheck - เช็คโดนล็อคไมค์ไหม
+
+🔒 ล็อคห้อง/แชท
+!lockvc - ล็อคห้องเสียง ไม่ให้เข้า
+!unlockvc - ปลดล็อคห้องเสียง
+!lock - ล็อคห้องแชท ไม่ให้พิมพ์
+!unlock - ปลดล็อคห้องแชท
+!muteallchat - ปิดแชททุกห้อง
+!unmuteallchat - เปิดแชททุกห้อง
+!slowmode - เปิดพิมพ์ช้า
+!noslow - ปิดพิมพ์ช้า
+!slowmodeall - เปิดพิมพ์ช้าทุกห้อง
+!norole - คนในห้องแอดมินใช้ยศไม่ได้ ยกเว้นแอดมิน
+!yesrole - ปลดล็อคยศในห้อง
+
+↔️ ย้าย/ตัดสาย
+!move - ย้ายคนไปห้องอื่น
+!moveall - ย้ายทุกคนไปห้องอื่น
+!disconnect - ตัดสายคนเดียว
+!disconnectall - ตัดสายทุกคน
+!vcinfo - ดู Snapshot ห้องเสียง
+!clearallvc - ล้างห้องเสียง
+
+🔨 แบน/เตะ/เตือน
+!ban - แบน
+!unban - ปลดแบน
+!unbanall - ปลดแบนทุกคน
+!listbans - ดูคนโดนแบน
+!kick - เตะ
+!massban - แบนหลายคนทีเดียว
+!timeout - หมดเวลา
+!untimeout - ปลดหมดเวลา
+!warn - เตือนแบบกล่อง
+!clear - ลบข้อความ
+!purge - ลบข้อความจำนวนมาก
+!nuke - ล้างห้องใหม่
+
+👥 จัดการคน/ยศ
+!nick - เปลี่ยนชื่อคน
+!addrole - ใส่ยศ
+!removerole - ถอดยศ
+!userinfo - ดูข้อมูลคน
+!myinfo - ดูข้อมูลตัวเอง
+!avatar - ดูรูปโปรไฟล์
+!serverinfo - ดูข้อมูลเซิร์ฟ
+!members - ดูจำนวนสมาชิก
+!roleinfo - ดูข้อมูลยศ
+!channelinfo - ดูข้อมูลห้อง
+!renamechannel - เปลี่ยนชื่อห้อง
+!createvc - สร้างห้องเสียง
+!createtext - สร้างห้องแชท
+!delchannel - ลบห้อง
+
+📢 ประกาศ/อื่นๆ
+!setstatus - ตั้งสถานะบอท
+!say - ให้บอทพูดแทน
+!announce - ประกาศแบบกล่องแดง
+!embed - ส่งเป็นกล่อง
+!poll - สร้างโหวต
+!giveaway - แจกของ
+!dm - ส่ง DM
+!ping - เช็คปิง
+!help - ดูคำสั่งทั้งหมด"""
+    await ctx.send(msg)
 @bot.command(name="cmds")
 async def cmds_alias(ctx):
     if not is_allowed(ctx): await deny(ctx); return
