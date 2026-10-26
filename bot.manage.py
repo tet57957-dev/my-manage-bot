@@ -144,82 +144,16 @@ async def ping(ctx):
 @bot.command(name="help")
 async def help_cmd(ctx):
     if not is_allowed(ctx): await deny(ctx); return
-    # แบบสวยๆ แบบในรูปที่พี่ชอบ - ส่งเป็น 1 ข้อความพอดี 1893 ตัวอักษร
-    msg = """📋 คำสั่งทั้งหมด - Bot Manage (rreqzn2l) - แอดมินเท่านั้น
-ทั้งหมด 60 คำสั่ง | สมาชิกใช้ไม่ได้
-
-🔇 ปิดไมค์/หูฟัง (ล็อค เปิดเองไม่ได้)
-!vmute - ปิดไมค์คนเดียว (ล็อค เปิดเองไม่ได้)
-!vunmute - เปิดไมค์คนเดียว
-!vdeafen - ปิดหูฟังคนเดียว (ล็อค เปิดเองไม่ได้)
-!vundeafen - เปิดหูฟังคนเดียว
-!muteall - ปิดไมค์ทุกคน (ล็อค เปิดเองไม่ได้)
-!unmuteall - เปิดไมค์ทุกคน
-!deafenall - ปิดหูฟังทุกคน (ล็อค เปิดเองไม่ได้)
-!undeafenall - เปิดหูฟังทุกคน
-!lockall - ปิดทั้งไมค์+หูฟังทุกคน
-!unlockall - เปิดทั้งไมค์+หูฟังทุกคน
-!lockmic - ล็อคไมค์อย่างเดียว ไม่ล็อคห้อง
-!unlockmic - ปลดล็อคไมค์
-!lockdeafen - ล็อคหูฟังอย่างเดียว
-!unlockdeafen - ปลดล็อคหูฟัง
-!tempMute - ปิดไมค์ชั่วคราวตามนาที
-!mutelist - ดูใครโดนล็อคไมค์ในห้อง
-!mutecheck - เช็คโดนล็อคไมค์ไหม
-
-🔒 ล็อคห้อง/แชท
-!lockvc - ล็อคห้องเสียง ไม่ให้เข้า
-!unlockvc - ปลดล็อคห้องเสียง
-!lock - ล็อคห้องแชท ไม่ให้พิมพ์
-!unlock - ปลดล็อคห้องแชท
-!muteallchat - ปิดแชททุกห้อง
-!unmuteallchat - เปิดแชททุกห้อง
-!slowmode - เปิดพิมพ์ช้า
-!noslow - ปิดพิมพ์ช้า
-!slowmodeall - เปิดพิมพ์ช้าทุกห้อง
-!norole - คนในห้องแอดมินใช้ยศไม่ได้ ยกเว้นแอดมิน
-!yesrole - ปลดล็อคยศในห้อง
-
-↔️ ย้าย/ตัดสาย
-!move - ย้ายคนไปห้องอื่น
-!moveall - ย้ายทุกคนไปห้องอื่น
-!disconnect - ตัดสายคนเดียว
-!disconnectall - ตัดสายทุกคน
-!vcinfo - ดู Snapshot ห้องเสียง
-!clearallvc - ล้างห้องเสียง
-
-🔨 แบน/เตะ/เตือน
-!ban - แบน
-!unban - ปลดแบน
-!unbanall - ปลดแบนทุกคน
-!listbans - ดูคนโดนแบน
-!kick - เตะ
-!massban - แบนหลายคนทีเดียว
-!timeout - หมดเวลา
-!untimeout - ปลดหมดเวลา
-!warn - เตือนแบบกล่อง
-!clear - ลบข้อความ
-!purge - ลบข้อความจำนวนมาก
-!nuke - ล้างห้องใหม่
-
-👥 จัดการคน/ยศ
-!nick - เปลี่ยนชื่อคน
-!addrole - ใส่ยศ
-!removerole - ถอดยศ
-!userinfo - ดูข้อมูลคน
-!serverinfo - ดูข้อมูลเซิร์ฟ
-!members - ดูจำนวนสมาชิก
-!roleinfo - ดูข้อมูลยศ
-!channelinfo - ดูข้อมูลห้อง
-!renamechannel - เปลี่ยนชื่อห้อง
-!createvc - สร้างห้องเสียง
-!createtext - สร้างห้องแชท
-!delchannel - ลบห้อง
-
-📢 ประกาศ/อื่นๆ
-!ping - เช็คปิง
-!help - ดูคำสั่งทั้งหมด"""
-    await ctx.send(msg)  # ตอนนี้ไม่เกิน 2000 แล้ว ส่งข้อความเดียวพอ
+    # แบบกรอบสี่เหลี่ยม (Embed) แบบในรูปที่ 2 - แต่ละช่องไม่เกิน 1024 ตัวอักษร
+    embed = discord.Embed(title="📋 คำสั่งทั้งหมด - Bot Manage (rreqzn2l)", description="ใช้ในห้อง setup / หลังบ้านได้เลย\nทั้งหมด 60 คำสั่ง | สมาชิกใช้ไม่ได้", color=0x2b2d31)
+    embed.add_field(name="🔇 ปิดไมค์/หูฟัง (ล็อค เปิดเองไม่ได้)", value="!vmute @คน / !vmute ID ปิดไมค์คนเดียว\n!vunmute @คน เปิดไมค์\n!vdeafen @คน ปิดหูฟัง\n!vundeafen @คน เปิดหูฟัง\n!muteall / !unmuteall ปิด/เปิดไมค์ทั้งห้อง\n!deafenall / !undeafenall ปิด/เปิดหูฟังทั้งห้อง\n!lockall / !unlockall ปิด/เปิดทั้งไมค์+หูฟัง\n!lockmic / !unlockmic ล็อคไมค์\n!lockdeafen / !unlockdeafen ล็อคหูฟัง\n!tempMute ปิดไมค์ชั่วคราว\n!mutelist / !mutecheck ดูใครโดนล็อค", inline=False)
+    embed.add_field(name="🔒 ล็อคห้อง/แชท", value="!lockvc / !unlockvc ล็อคห้องเสียง\n!lock / !unlock ล็อคห้องแชท\n!muteallchat / !unmuteallchat ปิดแชททุกห้อง\n!slowmode / !noslow พิมพ์ช้า\n!slowmodeall พิมพ์ช้าทุกห้อง\n!norole / !yesrole ล็อคยศในห้อง", inline=False)
+    embed.add_field(name="↔️ ย้าย/ตัดสาย", value="!move @คน #ห้อง / !moveall #ห้อง ย้าย\n!disconnect @คน ตัดสายคนเดียว\n!disconnectall ตัดสายทุกคน\n!vcinfo ดู Snapshot ห้องเสียง\n!clearallvc ล้างห้องเสียง", inline=False)
+    embed.add_field(name="🔨 แบน/เตะ/จัดการคน", value="!ban @คน เหตุผล แบน\n!kick @คน เหตุผล เตะ\n!unban ID ปลดแบน\n!unbanall / !listbans\n!massban แบนหลายคน\n!timeout @คน 10 หมดเวลา 10 นาที\n!untimeout @คน ปลดหมดเวลา\n!warn @คน เหตุผล เตือน (แบบกล่อง)\n!clear 10 ลบข้อความ 10 ข้อความ\n!purge / !nuke ลบ/ล้างห้อง", inline=False)
+    embed.add_field(name="👥 จัดการคน/ยศ", value="!nick / !addrole / !removerole\n!userinfo / !serverinfo / !members\n!roleinfo / !channelinfo / !renamechannel\n!createvc / !createtext / !delchannel", inline=False)
+    embed.add_field(name="📢 อื่นๆ", value="!ping เช็คปิง\n!help ดูคำสั่งทั้งหมด", inline=False)
+    embed.set_footer(text="ใช้ได้แค่: แอดมินเท่านั้น | ยศสูงกว่าบอทเท่านั้น | ยศต่ำกว่าบอทใช้ไม่ได้")
+    await ctx.send(embed=embed)
 @bot.command(name="cmds")
 async def cmds_alias(ctx):
     if not is_allowed(ctx): await deny(ctx); return
