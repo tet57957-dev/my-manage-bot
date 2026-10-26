@@ -18,7 +18,7 @@ def run_web():
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
 Thread(target=run_web, daemon=True).start()
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 @bot.event
 async def on_ready():
