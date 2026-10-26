@@ -297,15 +297,17 @@ async def help_cmd(ctx):
 music_queues = {}
 music_now = {}
 ytdl_opts = {
-    'format': 'bestaudio/best',
+    'format': 'bestaudio[ext=m4a]/bestaudio/best',
     'noplaylist': True,
     'quiet': True,
     'no_warnings': True,
     'default_search': 'ytsearch',
     'source_address': '0.0.0.0',
-    'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    'extractor_args': {'youtube': {'player_client': ['android']}},
-    'socket_timeout': 20,
+    'user_agent': 'Mozilla/5.0 (Linux; Android 10; SM-G975F) AppleWebKit/537.36',
+    'extractor_args': {'youtube': {'player_client': ['android', 'ios', 'web']}},
+    'socket_timeout': 30,
+    'retries': 3,
+    'force_ipv4': True,
 }
 ffmpeg_opts = {'options': '-vn', 'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'}
 
@@ -359,7 +361,8 @@ async def play(ctx, *, query):
             url = info['url']
             title = info.get('title', query)
     except Exception as e:
-        await ctx.send(f"❌ หาเพลงไม่เจอ: {e}")
+        print(f'YTDLP ERROR: {e}')
+        await ctx.send(f"❌ หาเพลงไม่เจอ: {e} - ลองพิมพ์ชื่อเพลงสั้นๆ เช่น `!play 1MILL` ดูครับ")
         return
     q = get_queue(ctx.guild.id)
     q.append((url, title, ctx.author.mention))
