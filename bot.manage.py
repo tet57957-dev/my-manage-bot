@@ -907,4 +907,13 @@ async def mutelist(ctx):
     else:
         await ctx.send("🔇 คนที่โดนล็อคในห้องนี้:\n" + "\n".join(lines))
 
+
+@bot.command(name="cmds")
+async def cmds_alias(ctx):
+    await ctx.invoke(bot.get_command("help"))
+
+@bot.command(name="commands")
+async def commands_alias(ctx):
+    await ctx.invoke(bot.get_command("help"))
+
 bot.run(TOKEN)
