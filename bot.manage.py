@@ -1,16 +1,6 @@
 import discord
 from discord.ext import commands
-import datetime, os, asyncio
-try:
-    import yt_dlp
-    HAS_YTDLP = True
-except:
-    HAS_YTDLP = False
-try:
-    import imageio_ffmpeg
-    FFMPEG_PATH = imageio_ffmpeg.get_ffmpeg_exe()
-except:
-    FFMPEG_PATH = 'ffmpeg'
+import datetime, os
 
 # === บอทที่ 2: บอทจัดการคน (ไม่กันอะไรเลย ใช้คำสั่งอย่างเดียว) ===
 # เอาไว้สำหรับพี่ดิวคนเดียว หัวดิสเท่านั้น
@@ -287,145 +277,9 @@ async def help_cmd(ctx):
     embed.add_field(name="🔇 ปิดไมค์ / หูฟัง คนเดียว", value="`!vmute @คน / !vmute ID` ปิดไมค์คนเดียว\n`!vunmute @คน` เปิดไมค์\n`!vdeafen @คน` ปิดหูฟัง\n`!vundeafen @คน` เปิดหูฟัง", inline=False)
     embed.add_field(name="🔇 ปิดไมค์ ทั้งห้อง", value="`!muteall` / `!unmuteall` ปิด/เปิดไมค์ทั้งห้อง\n`!deafenall` / `!undeafenall` ปิด/เปิดหูฟังทั้งห้อง\n`!disconnectall` ตัดสายทั้งห้อง\n`!lockvc` / `!unlockvc` ล็อค/ปลดล็อคห้อง", inline=False)
     embed.add_field(name="↔️ ย้าย / ดูห้องเสียง", value="`!move @คน #ห้อง` / `!moveall #ห้อง` ย้าย\n`!disconnect @คน` ตัดสายคนเดียว\n`!vcinfo` ดู Snapshot ห้องเสียง", inline=False)
-    embed.add_field(name="🎵 เปิดเพลง", value="`!play ชื่อเพลง / ลิงก์` เปิดเพลง\n`!skip` ข้ามเพลง\n`!stop` หยุดเพลง\n`!pause` / `!resume` หยุด/เล่นต่อ\n`!queue` ดูคิวเพลง\n`!np` ดูเพลงที่เล่นอยู่\n`!leave` ออกจากห้องเสียง", inline=False)
     embed.add_field(name="🔨 แบน / เตะ / จัดการคน", value="`!ban @คน เหตุผล` แบน\n`!kick @คน เหตุผล` เตะ\n`!unban ID` ปลดแบน\n`!timeout @คน 10` หมดเวลา 10 นาที\n`!untimeout @คน` ปลดหมดเวลา\n`!warn @คน เหตุผล` เตือน (แบบกล่อง)\n`!clear 10` ลบข้อความ 10 ข้อความ\n`!ping` เช็คปิง", inline=False)
     embed.set_footer(text="ใช้ได้แค่: แอดมินเท่านั้น")
     await ctx.send(embed=embed)
 
-
-# === ระบบเปิดเพลง (ใช้ลิงก์อะไรก็ได้ / ค้นชื่อเพลงก็ได้) ===
-music_queues = {}
-music_now = {}
-ytdl_opts = {
-    'format': 'bestaudio[ext=m4a]/bestaudio/best',
-    'noplaylist': True,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'ytsearch',
-    'source_address': '0.0.0.0',
-    'user_agent': 'Mozilla/5.0 (Linux; Android 10; SM-G975F) AppleWebKit/537.36',
-    'extractor_args': {'youtube': {'player_client': ['android', 'ios', 'web']}},
-    'socket_timeout': 30,
-    'retries': 3,
-    'force_ipv4': True,
-}
-ffmpeg_opts = {'options': '-vn', 'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'}
-
-def get_queue(gid):
-    if gid not in music_queues:
-        music_queues[gid] = []
-    return music_queues[gid]
-
-async def play_next(ctx):
-    q = get_queue(ctx.guild.id)
-    vc = ctx.voice_client
-    if not vc: return
-    if not q:
-        music_now.pop(ctx.guild.id, None)
-        return
-    url, title, requester = q.pop(0)
-    music_now[ctx.guild.id] = (title, requester)
-    try:
-        source = discord.FFmpegPCMAudio(url, executable=FFMPEG_PATH, **ffmpeg_opts)
-        vc.play(source, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), bot.loop))
-        await ctx.send(f"🎵 กำลังเล่น: **{title}** - ขอโดย {requester}")
-    except Exception as e:
-        print(f'MUSIC ERROR: {e}')
-        await ctx.send(f"❌ เปิดเพลงไม่ได้: {e} - ลองพิมพ์ !play ชื่อเพลง แบบไม่ใส่ลิงก์ดูครับ")
-        await play_next(ctx)
-
-async def ensure_voice(ctx):
-    if not ctx.author.voice:
-        await ctx.send("❌ เข้าห้องเสียงก่อนครับ")
-        return None
-    ch = ctx.author.voice.channel
-    if not ctx.voice_client:
-        await ch.connect()
-    elif ctx.voice_client.channel != ch:
-        await ctx.voice_client.move_to(ch)
-    return ctx.voice_client
-
-@bot.command()
-async def play(ctx, *, query):
-    if not HAS_YTDLP:
-        await ctx.send("❌ บอทยังไม่ได้ลง yt-dlp ครับ ไป Render ใส่ Build Command เป็น `pip install discord.py flask yt-dlp imageio-ffmpeg` แล้ว Deploy ใหม่")
-        return
-    vc = await ensure_voice(ctx)
-    if not vc: return
-    await ctx.send(f"🔍 กำลังค้นหา: `{query}` ... รอแป๊บนึงนะครับ กำลังโหลดเพลงอยู่ (ประมาณ 10-20 วิ)")
-    def do_search(q):
-        with yt_dlp.YoutubeDL(ytdl_opts) as ydl:
-            inf = ydl.extract_info(q, download=False)
-            if 'entries' in inf:
-                inf = inf['entries'][0]
-            return inf['url'], inf.get('title', q)
-    try:
-        url, title = await asyncio.to_thread(do_search, query)
-    except Exception as e:
-        print(f'YTDLP ERROR: {e}')
-        await ctx.send(f"❌ หาเพลงไม่เจอ: {e} - YouTube บล็อค Render ครับ ลองพิมพ์ชื่อเพลงสั้นๆ เช่น `!play 1MILL` ดูครับ")
-        return
-    q = get_queue(ctx.guild.id)
-    q.append((url, title, ctx.author.mention))
-    if not ctx.voice_client.is_playing() and not ctx.voice_client.is_paused():
-        await play_next(ctx)
-    else:
-        await ctx.send(f"➕ เพิ่มเข้าคิวแล้ว: **{title}** (คิวที่ {len(q)})")
-
-@bot.command()
-async def skip(ctx):
-    if ctx.voice_client and ctx.voice_client.is_playing():
-        ctx.voice_client.stop()
-        await ctx.send("⏭️ ข้ามเพลงแล้ว")
-    else:
-        await ctx.send("❌ ตอนนี้ไม่ได้เล่นเพลงอยู่ครับ")
-
-@bot.command()
-async def stop(ctx):
-    q = get_queue(ctx.guild.id)
-    q.clear()
-    if ctx.voice_client:
-        ctx.voice_client.stop()
-    await ctx.send("⏹️ หยุดเพลงแล้ว ล้างคิวแล้ว")
-
-@bot.command()
-async def pause(ctx):
-    if ctx.voice_client and ctx.voice_client.is_playing():
-        ctx.voice_client.pause()
-        await ctx.send("⏸️ หยุดเพลงชั่วคราวแล้ว")
-@bot.command()
-async def resume(ctx):
-    if ctx.voice_client and ctx.voice_client.is_paused():
-        ctx.voice_client.resume()
-        await ctx.send("▶️ เล่นเพลงต่อแล้ว")
-
-@bot.command()
-async def queue(ctx):
-    q = get_queue(ctx.guild.id)
-    if not q and ctx.guild.id not in music_now:
-        await ctx.send("📭 คิวว่างอยู่ครับ")
-        return
-    msg = "🎵 คิวเพลง:\n"
-    if ctx.guild.id in music_now:
-        msg += f"▶️ กำลังเล่น: {music_now[ctx.guild.id][0]}\n"
-    for i, (u, title, req) in enumerate(q, 1):
-        msg += f"{i}. {title} - {req}\n"
-    await ctx.send(msg)
-
-@bot.command()
-async def np(ctx):
-    if ctx.guild.id in music_now:
-        title, req = music_now[ctx.guild.id]
-        await ctx.send(f"🎵 ตอนนี้เล่น: **{title}** - ขอโดย {req}")
-    else:
-        await ctx.send("❌ ตอนนี้ไม่ได้เล่นเพลงอยู่ครับ")
-
-@bot.command()
-async def leave(ctx):
-    if ctx.voice_client:
-        await ctx.voice_client.disconnect()
-        await ctx.send("👋 ออกจากห้องเสียงแล้ว")
-
-# เพิ่มคำสั่งเพลงเข้า !help ด้วย - แก้ embed footer ด้านล่างไม่ได้ แค่เพิ่ม field ใน help_cmd จะทำตอน deploy ครับ
 
 bot.run(TOKEN)
