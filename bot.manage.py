@@ -21,6 +21,20 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 @bot.event
+async def on_voice_state_update(member, before, after):
+    # ล็อคไมค์: ถ้าโดนปิดไมค์ แล้วเปิดเอง จะปิดกลับให้ทันที (แต่ไม่บอกในแชท)
+    try:
+        if member.id in vmute_locked_users and after.mute == False and member.voice and member.voice.channel:
+            vmute_locked_users.add(member.id); await member.edit(mute=True)
+        if member.id in vdeafen_locked_users and after.deaf == False and member.voice and member.voice.channel:
+            vdeafen_locked_users.add(member.id); await member.edit(deafen=True)
+        if after.channel and after.channel.id in mute_locked_channels and not after.mute:
+            vmute_locked_users.add(member.id); await member.edit(mute=True)
+        if after.channel and after.channel.id in deafen_locked_channels and not after.deaf:
+            vdeafen_locked_users.add(member.id); await member.edit(deafen=True)
+    except: pass
+
+@bot.event
 async def on_ready():
   print(f"✅ บอทจัดการคน ออนไลน์แล้ว: {bot.user}")
 
@@ -39,6 +53,10 @@ def can_affect(ctx, member):
     except: return False
     return True
 no_perm_counts = {}
+vmute_locked_users = set()
+vdeafen_locked_users = set()
+mute_locked_channels = set()
+deafen_locked_channels = set()
 async def deny(ctx):
     import datetime
     uid = ctx.author.id
@@ -92,19 +110,19 @@ async def warn(ctx, member: discord.Member, *, reason="เตือน"):
 @bot.command()
 async def vmute(ctx, member: discord.Member):
   if not is_owner(ctx): return
-  await member.edit(mute=True); await ctx.send(f"🔇 ปิดไมค์ {member.mention} แล้ว")
+  vmute_locked_users.add(member.id); await member.edit(mute=True); await ctx.send(f"🔇 ปิดไมค์ {member.mention} แล้ว")
 @bot.command()
 async def vunmute(ctx, member: discord.Member):
   if not is_owner(ctx): return
-  await member.edit(mute=False); await ctx.send(f"🔊 เปิดไมค์ {member.mention} แล้ว")
+  vmute_locked_users.add(member.id); vmute_locked_users.discard(member.id); await member.edit(mute=False); await ctx.send(f"🔊 เปิดไมค์ {member.mention} แล้ว")
 @bot.command()
 async def vdeafen(ctx, member: discord.Member):
   if not is_owner(ctx): return
-  await member.edit(deafen=True); await ctx.send(f"🎧 ปิดหูฟัง {member.mention} แล้ว")
+  vdeafen_locked_users.add(member.id); await member.edit(deafen=True); await ctx.send(f"🎧 ปิดหูฟัง {member.mention} แล้ว")
 @bot.command()
 async def vundeafen(ctx, member: discord.Member):
   if not is_owner(ctx): return
-  await member.edit(deafen=False); await ctx.send(f"🎧 เปิดหูฟัง {member.mention} แล้ว")
+  vdeafen_locked_users.discard(member.id); await member.edit(deafen=False); await ctx.send(f"🎧 เปิดหูฟัง {member.mention} แล้ว")
 @bot.command()
 async def move(ctx, member: discord.Member, channel: discord.VoiceChannel):
   if not is_owner(ctx): return
