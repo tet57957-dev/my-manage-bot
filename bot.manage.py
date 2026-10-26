@@ -6,6 +6,11 @@ try:
     HAS_YTDLP = True
 except:
     HAS_YTDLP = False
+try:
+    import imageio_ffmpeg
+    FFMPEG_PATH = imageio_ffmpeg.get_ffmpeg_exe()
+except:
+    FFMPEG_PATH = 'ffmpeg'
 
 # === บอทที่ 2: บอทจัดการคน (ไม่กันอะไรเลย ใช้คำสั่งอย่างเดียว) ===
 # เอาไว้สำหรับพี่ดิวคนเดียว หัวดิสเท่านั้น
@@ -298,6 +303,9 @@ ytdl_opts = {
     'no_warnings': True,
     'default_search': 'ytsearch',
     'source_address': '0.0.0.0',
+    'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    'extractor_args': {'youtube': {'player_client': ['android']}},
+    'socket_timeout': 20,
 }
 ffmpeg_opts = {'options': '-vn', 'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'}
 
@@ -316,11 +324,12 @@ async def play_next(ctx):
     url, title, requester = q.pop(0)
     music_now[ctx.guild.id] = (title, requester)
     try:
-        source = discord.FFmpegPCMAudio(url, **ffmpeg_opts)
+        source = discord.FFmpegPCMAudio(url, executable=FFMPEG_PATH, **ffmpeg_opts)
         vc.play(source, after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), bot.loop))
         await ctx.send(f"🎵 กำลังเล่น: **{title}** - ขอโดย {requester}")
     except Exception as e:
-        await ctx.send(f"❌ เปิดเพลงไม่ได้: {e}")
+        print(f'MUSIC ERROR: {e}')
+        await ctx.send(f"❌ เปิดเพลงไม่ได้: {e} - ลองพิมพ์ !play ชื่อเพลง แบบไม่ใส่ลิงก์ดูครับ")
         await play_next(ctx)
 
 async def ensure_voice(ctx):
@@ -337,7 +346,7 @@ async def ensure_voice(ctx):
 @bot.command()
 async def play(ctx, *, query):
     if not HAS_YTDLP:
-        await ctx.send("❌ บอทยังไม่ได้ลง yt-dlp ครับ ไป Render ใส่ Build Command เป็น `pip install discord.py flask yt-dlp` แล้ว Deploy ใหม่")
+        await ctx.send("❌ บอทยังไม่ได้ลง yt-dlp ครับ ไป Render ใส่ Build Command เป็น `pip install discord.py flask yt-dlp imageio-ffmpeg` แล้ว Deploy ใหม่")
         return
     vc = await ensure_voice(ctx)
     if not vc: return
