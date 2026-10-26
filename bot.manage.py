@@ -129,6 +129,7 @@ HELP_DESC = {
 "dm":"ส่ง DM",
 "ping":"เช็คปิง",
 "help":"ดูคำสั่งทั้งหมด",
+"mutelist":"ดูใครโดนล็อคไมค์ในห้อง",
 "slowmodeall":"เปิดพิมพ์ช้าทุกห้อง",
 "clearallvc":"ล้างห้องเสียง",
 "mutecheck":"เช็คโดนล็อคไมค์ไหม",
@@ -547,7 +548,7 @@ async def help_cmd(ctx):
 "🔨 แบน/เตะ": ["ban","unban","unbanall","listbans","kick","massban","timeout","untimeout","warn","clear","purge","nuke"],
 "👤 จัดการสมาชิก": ["nick","addrole","removerole","userinfo","myinfo","avatar","serverinfo","members","roleinfo","channelinfo","renamechannel","createvc","createtext","delchannel"],
 "📢 ประกาศ/อื่นๆ": ["say","announce","embed","poll","giveaway","dm","setstatus","ping","help"],
-"🆕 เพิ่มหมดเลย": ["clearallvc","slowmodeall","vcinvite","voiceall","removeroleall","whois","lastseen","activity","mutecheck","kickall","unmutehistory","voicetime","vckick","voicemute","voicedeafen","nickall","resetnick","roleall","setnick","snipe","editsnipe","restart","status","clearall","purgebot","setprefix","backup","welcome","autorole","antiraid","setlog","voicename","voicelimit","vchide","vcshow","warnlist","clearwarn","mutehistory","jail","unjail","ball8","coinflip","dice","rps","meme","uptime","shutdown"],
+"🆕 เพิ่มหมดเลย": ["mutelist","clearallvc","slowmodeall","vcinvite","voiceall","removeroleall","whois","lastseen","activity","mutecheck","kickall","unmutehistory","voicetime","vckick","voicemute","voicedeafen","nickall","resetnick","roleall","setnick","snipe","editsnipe","restart","status","clearall","purgebot","setprefix","backup","welcome","autorole","antiraid","setlog","voicename","voicelimit","vchide","vcshow","warnlist","clearwarn","mutehistory","jail","unjail","ball8","coinflip","dice","rps","meme","uptime","shutdown"],
     }
     for g, names in groups.items():
         val="\n".join([f"`!{n}` - {HELP_DESC.get(n,'')}" for n in names])
@@ -887,5 +888,23 @@ async def slowmodeall(ctx, sec: int = 5):
         try: await ch.edit(slowmode_delay=sec)
         except: pass
     await ctx.send(f"🐢 เปิดพิมพ์ช้า {sec} วิ ทุกห้องแล้ว")
+
+
+@bot.command()
+async def mutelist(ctx):
+    if not is_allowed(ctx): await deny(ctx); return
+    if not ctx.author.voice:
+        await ctx.send(f"🔇 คนที่โดนล็อคไมค์ตอนนี้ {len(locked_users)} คน: {list(locked_users)[:10]}"); return
+    members = ctx.author.voice.channel.members
+    lines = []
+    for m in members:
+        if m.id in locked_users:
+            lines.append(f"🔇 {m.display_name} - ล็อคไมค์ เปิดเองไม่ได้")
+        if m.id in deafen_locked_users:
+            lines.append(f"🔇 {m.display_name} - ล็อคหูฟัง เปิดเองไม่ได้")
+    if not lines:
+        await ctx.send("✅ ในห้องนี้ไม่มีใครโดนล็อคครับ")
+    else:
+        await ctx.send("🔇 คนที่โดนล็อคในห้องนี้:\n" + "\n".join(lines))
 
 bot.run(TOKEN)
