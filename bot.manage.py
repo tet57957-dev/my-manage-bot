@@ -82,7 +82,7 @@ async def on_voice_state_update(member, before, after):
 
 # คำอธิบายทุกคำสั่ง สำหรับ !help
 HELP_DESC = {
-"vmute":"ปิดไมค์คนเดียว (ล็อค เปิดเองไม่ได้)","vunmute":"เปิดไมค์คนเดียว","vdeafen":"ปิดหูฟังคนเดียว (ล็อค เปิดเองไม่ได้)","vundeafen":"เปิดหูฟังคนเดียว","muteall":"ปิดไมค์ทุกคน (ล็อค เปิดเองไม่ได้)","unmuteall":"เปิดไมค์ทุกคน","deafenall":"ปิดหูฟังทุกคน (ล็อค เปิดเองไม่ได้)","undeafenall":"เปิดหูฟังทุกคน","lockall":"ปิดทั้งไมค์+หูฟังทุกคน","unlockall":"เปิดทั้งไมค์+หูฟังทุกคน","lockmic":"ล็อคไมค์อย่างเดียว ไม่ล็อคห้อง","unlockmic":"ปลดล็อคไมค์","lockdeafen":"ล็อคหูฟังอย่างเดียว","unlockdeafen":"ปลดล็อคหูฟัง","tempMute":"ปิดไมค์ชั่วคราวตามนาที","lockvc":"ล็อคห้องเสียง ไม่ให้เข้า","unlockvc":"ปลดล็อคห้องเสียง","lock":"ล็อคห้องแชท ไม่ให้พิมพ์","unlock":"ปลดล็อคห้องแชท","muteallchat":"ปิดแชททุกห้อง","unmuteallchat":"เปิดแชททุกห้อง","slowmode":"เปิดพิมพ์ช้า","noslow":"ปิดพิมพ์ช้า","move":"ย้ายคนไปห้องอื่น","moveall":"ย้ายทุกคนไปห้องอื่น","disconnect":"ตัดสายคนเดียว","disconnectall":"ตัดสายทุกคน","vcinfo":"ดู Snapshot ห้องเสียง","ban":"แบน","unban":"ปลดแบน","unbanall":"ปลดแบนทุกคน","listbans":"ดูคนโดนแบน","kick":"เตะ","massban":"แบนหลายคนทีเดียว","timeout":"หมดเวลา","untimeout":"ปลดหมดเวลา","warn":"เตือนแบบกล่อง","clear":"ลบข้อความ","purge":"ลบข้อความจำนวนมาก","nuke":"ล้างห้องใหม่","ping":"เช็คปิง","help":"ดูคำสั่งทั้งหมด","norole":"คนในห้องแอดมินใช้ยศไม่ได้ ยกเว้นแอดมิน","yesrole":"ปลดล็อคยศในห้อง","mutelist":"ดูใครโดนล็อคไมค์ในห้อง","mutecheck":"เช็คโดนล็อคไมค์ไหม","slowmodeall":"เปิดพิมพ์ช้าทุกห้อง","clearallvc":"ล้างห้องเสียง"
+"vmute":"ปิดไมค์คนเดียว (ล็อค เปิดเองไม่ได้)","vunmute":"เปิดไมค์คนเดียว","vdeafen":"ปิดหูฟังคนเดียว (ล็อค เปิดเองไม่ได้)","vundeafen":"เปิดหูฟังคนเดียว","muteall":"ปิดไมค์ทุกคน (ล็อค เปิดเองไม่ได้)","unmuteall":"เปิดไมค์ทุกคน","deafenall":"ปิดหูฟังทุกคน (ล็อค เปิดเองไม่ได้)","undeafenall":"เปิดหูฟังทุกคน","lockall":"ปิดทั้งไมค์+หูฟังทุกคน","unlockall":"เปิดทั้งไมค์+หูฟังทุกคน","lockmic":"ล็อคไมค์อย่างเดียว ไม่ล็อคห้อง","unlockmic":"ปลดล็อคไมค์","lockdeafen":"ล็อคหูฟังอย่างเดียว","unlockdeafen":"ปลดล็อคหูฟัง","tempMute":"ปิดไมค์ชั่วคราวตามนาที","lockvc":"ล็อคห้องเสียง ไม่ให้เข้า","unlockvc":"ปลดล็อคห้องเสียง","lock":"ล็อคห้องแชท ไม่ให้พิมพ์","unlock":"ปลดล็อคห้องแชท","muteallchat":"ปิดแชททุกห้อง","unmuteallchat":"เปิดแชททุกห้อง","slowmode":"เปิดพิมพ์ช้า","noslow":"ปิดพิมพ์ช้า","move":"ย้ายคนไปห้องอื่น","moveall":"ย้ายทุกคนไปห้องอื่น","disconnect":"ตัดสายคนเดียว","disconnectall":"ตัดสายทุกคน","vcinfo":"ดู Snapshot ห้องเสียง","ban":"แบน","unban":"ปลดแบน","unbanall":"ปลดแบนทุกคน","listbans":"ดูคนโดนแบน","kick":"เตะ","massban":"แบนหลายคนทีเดียว","timeout":"หมดเวลา","untimeout":"ปลดหมดเวลา","warn":"เตือนแบบกล่อง","clear":"ลบข้อความ","purge":"ลบข้อความจำนวนมาก","purgebot":"ลบข้อความบอท rreqzn1l ทั้งหมด ไม่ลบ Kanopi - !purgebot @บอท ลบเฉพาะบอทนั้น","nuke":"ล้างห้องใหม่","ping":"เช็คปิง","help":"ดูคำสั่งทั้งหมด","norole":"คนในห้องแอดมินใช้ยศไม่ได้ ยกเว้นแอดมิน","yesrole":"ปลดล็อคยศในห้อง","mutelist":"ดูใครโดนล็อคไมค์ในห้อง","mutecheck":"เช็คโดนล็อคไมค์ไหม","slowmodeall":"เปิดพิมพ์ช้าทุกห้อง","clearallvc":"ล้างห้องเสียง"
 }
 
 # === คำสั่งทั้งหมด - สร้างใหม่ครบ 48 คำสั่ง ===
@@ -448,6 +448,25 @@ async def purge(ctx, amount: int = 100):
     deleted = await ctx.channel.purge(limit=amount); await ctx.send(f"🧹 ลบ {len(deleted)} ข้อความแล้ว", delete_after=5)
 
 @bot.command()
+async def purgebot(ctx, target: discord.Member = None):
+    if not is_allowed(ctx): await deny(ctx); return
+    # ถ้าไม่ใส่ @บอท จะลบเฉพาะบอท rreqzn1l เท่านั้น ไม่ลบ Kanopi
+    # ถ้าอยากลบบอทอื่น พิมพ์ !purgebot @บอทนั้น
+    deleted = 0
+    async for msg in ctx.channel.history(limit=1000):
+        if target:
+            if msg.author.id == target.id:
+                try: await msg.delete(); deleted += 1; await asyncio.sleep(0.2)
+                except: pass
+        else:
+            # ลบเฉพาะ rreqzn1l เท่านั้น ไม่ลบ Kanopi
+            if msg.author.bot and "rreqzn1l" in msg.author.name.lower():
+                try: await msg.delete(); deleted += 1; await asyncio.sleep(0.2)
+                except: pass
+    name = target.display_name if target else "rreqzn1l"
+    await ctx.send(f"🤖 ลบข้อความของ {name} ทั้งหมด {deleted} ข้อความแล้ว (ไม่ลบ Kanopi)", delete_after=5)
+
+@bot.command()
 async def nuke(ctx):
     if not is_allowed(ctx): await deny(ctx); return
     ch = ctx.channel; new = await ch.clone(reason="nuke"); await ch.delete(); await new.send("🧹 ล้างห้องใหม่แล้ว")
@@ -484,11 +503,11 @@ async def yesrole(ctx):
 @bot.command(name="help")
 async def help_cmd(ctx):
     if not is_allowed(ctx): await deny(ctx); return
-    embed = discord.Embed(title="📋 คำสั่งทั้งหมด - Bot Manage (rreqzn2l)", description="ใช้ในห้อง setup / หลังบ้านได้เลย\nทั้งหมด 48 คำสั่ง | สมาชิกใช้ไม่ได้", color=0x2b2d31)
+    embed = discord.Embed(title="📋 คำสั่งทั้งหมด - Bot Manage (rreqzn2l)", description="ใช้ในห้อง setup / หลังบ้านได้เลย\nทั้งหมด 49 คำสั่ง | สมาชิกใช้ไม่ได้", color=0x2b2d31)
     embed.add_field(name="🔇 ปิดไมค์/หูฟัง (ล็อค เปิดเองไม่ได้)", value="!vmute @คน / !vmute ID ปิดไมค์คนเดียว\n!vunmute @คน เปิดไมค์\n!vdeafen @คน ปิดหูฟัง\n!vundeafen @คน เปิดหูฟัง\n!muteall / !unmuteall ปิด/เปิดไมค์เฉพาะยศต่ำกว่าบอท\n!deafenall / !undeafenall ปิด/เปิดหูฟังทั้งห้อง\n!lockall / !unlockall ปิด/เปิดทั้งไมค์+หูฟัง\n!lockmic / !unlockmic ล็อคไมค์\n!lockdeafen / !unlockdeafen ล็อคหูฟัง\n!tempMute ปิดไมค์ชั่วคราว\n!mutelist / !mutecheck ดูใครโดนล็อค", inline=False)
     embed.add_field(name="🔒 ล็อคห้อง/แชท", value="!lockvc / !unlockvc ล็อคห้องเสียง\n!lock / !unlock ล็อคห้องแชท\n!muteallchat / !unmuteallchat ปิดแชททุกห้อง\n!slowmode / !noslow พิมพ์ช้า\n!slowmodeall พิมพ์ช้าทุกห้อง\n!norole / !yesrole ล็อคยศในห้อง", inline=False)
     embed.add_field(name="↔️ ย้าย/ตัดสาย", value="!move @คน #ห้อง / !moveall #ห้อง ย้าย\n!disconnect @คน ตัดสายคนเดียว\n!disconnectall ตัดสายทุกคน\n!vcinfo ดู Snapshot ห้องเสียง\n!clearallvc ล้างห้องเสียง", inline=False)
-    embed.add_field(name="🔨 แบน/เตะ/จัดการคน", value="!ban @คน เหตุผล แบน\n!kick @คน เหตุผล เตะ\n!unban ID ปลดแบน\n!unbanall / !listbans\n!massban แบนหลายคน\n!timeout @คน 7d หมดเวลา 7 วัน / 10m 10 นาที\n!untimeout @คน ปลดหมดเวลา\n!warn @คน เหตุผล เตือน (แบบกล่อง)\n!clear 10 ลบข้อความ 10 ข้อความ\n!purge / !nuke ลบ/ล้างห้อง", inline=False)
+    embed.add_field(name="🔨 แบน/เตะ/จัดการคน", value="!ban @คน เหตุผล แบน\n!kick @คน เหตุผล เตะ\n!unban ID ปลดแบน\n!unbanall / !listbans\n!massban แบนหลายคน\n!timeout @คน 7d หมดเวลา 7 วัน / 10m 10 นาที\n!untimeout @คน ปลดหมดเวลา\n!warn @คน เหตุผล เตือน (แบบกล่อง)\n!clear 10 ลบข้อความ 10 ข้อความ\n!clear 10 = ลบ 10 ข้อความตามเลขที่พิมพ์\n!purge 100 = ลบ 100 ข้อความตามเลขที่พิมพ์\n!purgebot = ลบข้อความบอท rreqzn1l ทั้งหมดในห้อง ไม่ลบ Kanopi\n!purgebot @บอท = ลบข้อความบอทตัวนั้นทั้งหมด\n!nuke ล้างห้องใหม่", inline=False)
     embed.add_field(name="📢 อื่นๆ", value="!ping เช็คปิง\n!help ดูคำสั่งทั้งหมด", inline=False)
     embed.set_footer(text="ใช้ได้แค่: แอดมินเท่านั้น | ยศสูงกว่าบอทเท่านั้น | ยศต่ำกว่าบอทใช้ไม่ได้")
     await ctx.send(embed=embed)
