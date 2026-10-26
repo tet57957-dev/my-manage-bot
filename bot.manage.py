@@ -352,17 +352,18 @@ async def play(ctx, *, query):
         return
     vc = await ensure_voice(ctx)
     if not vc: return
-    await ctx.send(f"🔍 กำลังค้นหา: `{query}` ...")
-    try:
+    await ctx.send(f"🔍 กำลังค้นหา: `{query}` ... รอแป๊บนึงนะครับ กำลังโหลดเพลงอยู่ (ประมาณ 10-20 วิ)")
+    def do_search(q):
         with yt_dlp.YoutubeDL(ytdl_opts) as ydl:
-            info = ydl.extract_info(query, download=False)
-            if 'entries' in info:
-                info = info['entries'][0]
-            url = info['url']
-            title = info.get('title', query)
+            inf = ydl.extract_info(q, download=False)
+            if 'entries' in inf:
+                inf = inf['entries'][0]
+            return inf['url'], inf.get('title', q)
+    try:
+        url, title = await asyncio.to_thread(do_search, query)
     except Exception as e:
         print(f'YTDLP ERROR: {e}')
-        await ctx.send(f"❌ หาเพลงไม่เจอ: {e} - ลองพิมพ์ชื่อเพลงสั้นๆ เช่น `!play 1MILL` ดูครับ")
+        await ctx.send(f"❌ หาเพลงไม่เจอ: {e} - YouTube บล็อค Render ครับ ลองพิมพ์ชื่อเพลงสั้นๆ เช่น `!play 1MILL` ดูครับ")
         return
     q = get_queue(ctx.guild.id)
     q.append((url, title, ctx.author.mention))
