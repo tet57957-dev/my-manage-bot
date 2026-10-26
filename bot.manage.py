@@ -535,12 +535,13 @@ async def setstatus(ctx, *, status):
     await bot.change_presence(activity=discord.Game(name=status)); await ctx.send(f"✅ ตั้งสถานะบอทเป็น `{status}` แล้ว")
 @bot.command()
 async def ping(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
+    pass
     await ctx.send(f"🏓 ปิง {round(bot.latency*1000)} ms")
 
 @bot.command(name="help")
 async def help_cmd(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
+    # help ให้ทุกคนดูได้เพื่อเช็คว่าบอททำงานไหม
+    pass # ไม่เช็คสิทธิ์
     # ส่งเป็น 2 กล่อง เพราะ Discord จำกัดความยาว
     e1=discord.Embed(title="📋 คำสั่งทั้งหมด - Bot Manage (rreqzn2l) - แอดมินเท่านั้น", description=f"ทั้งหมด {len(HELP_DESC)} คำสั่ง | สมาชิกใช้ไม่ได้", color=0x2b2d31)
     groups={
@@ -705,7 +706,7 @@ async def restart(ctx):
 
 @bot.command()
 async def status(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
+    pass
     await ctx.send(f"🟢 บอทออนไลน์อยู่ครับ | Ping: {round(bot.latency*1000)}ms | เซิร์ฟ: {ctx.guild.name}")
 
 @bot.command()
