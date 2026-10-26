@@ -29,6 +29,22 @@ def is_allowed(ctx):
     return False
 def is_owner(ctx): return is_allowed(ctx)
 
+def can_affect(ctx, member):
+    # โดนได้แค่คนที่ยศต่ำกว่าบอทเท่านั้น
+    # ยศสูงกว่าบอท ไม่โดนอะไรเลย แม้จะเป็นเจ้าของเซิร์ฟก็ไม่โดน ถ้าไม่ใช่เจ้าของบอท
+    if member.id == OWNER_ID: return False
+    if member.id == ctx.guild.owner_id and member.id != OWNER_ID:
+        # เจ้าของเซิร์ฟ ถ้ายศสูงกว่าบอทก็ไม่โดน
+        try:
+            if member.top_role.position > ctx.guild.me.top_role.position: return False
+        except: pass
+    if member.bot: return False
+    try:
+        if member.top_role.position >= ctx.guild.me.top_role.position: return False
+    except: return False
+    return True
+
+
 no_perm_counts = {}
 async def deny(ctx):
     uid = ctx.author.id
@@ -51,10 +67,10 @@ async def on_ready():
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    if after.channel and after.channel.id in mute_locked_channels and not after.mute and member.id != OWNER_ID and not member.bot:
+    if after.channel and after.channel.id in mute_locked_channels and not after.mute and member.id != OWNER_ID and not member.bot and member.top_role.position < after.channel.guild.me.top_role.position:
         try: await member.edit(mute=True, reason="ล็อคไมค์")
         except: pass
-    if after.channel and after.channel.id in deafen_locked_channels and not after.deaf and member.id != OWNER_ID and not member.bot:
+    if after.channel and after.channel.id in deafen_locked_channels and not after.deaf and member.id != OWNER_ID and not member.bot and member.top_role.position < after.channel.guild.me.top_role.position:
         try: await member.edit(deafen=True, reason="ล็อคหูฟัง")
         except: pass
     if member.id in vmute_locked_users and not after.mute and member.id != OWNER_ID:
@@ -95,6 +111,7 @@ async def ping(ctx):
 async def vmute(ctx, member: discord.Member = None):
     if not is_allowed(ctx): await deny(ctx); return
     if not member: await ctx.send("❌ ใส่ @คน หรือ ID ครับ"); return
+    if not can_affect(ctx, member): await ctx.send("❌ คนนี้ยศสูงกว่าบอท ปิดไมค์ไม่ได้ครับ"); return
     try: await member.edit(mute=True); vmute_locked_users.add(member.id); await ctx.send(f"🔇 ปิดไมค์ {member.mention} แล้ว เปิดเองไม่ได้")
     except: await ctx.send("❌ ปิดไม่ได้ครับ")
 
@@ -109,6 +126,7 @@ async def vunmute(ctx, member: discord.Member = None):
 async def vdeafen(ctx, member: discord.Member = None):
     if not is_allowed(ctx): await deny(ctx); return
     if not member: return
+    if not can_affect(ctx, member): await ctx.send("❌ คนนี้ยศสูงกว่าบอท ปิดหูฟังไม่ได้ครับ"); return
     try: await member.edit(deafen=True); vdeafen_locked_users.add(member.id); await ctx.send(f"🔇 ปิดหูฟัง {member.mention} แล้ว เปิดเองไม่ได้")
     except: await ctx.send("❌ ปิดไม่ได้ครับ")
 
@@ -126,6 +144,7 @@ async def muteall(ctx):
     ch = ctx.author.voice.channel
     mute_locked_channels.add(ch.id)
     for m in ch.members:
+        if not can_affect(ctx, m): continue
         try: await m.edit(mute=True)
         except: pass
     await ctx.send(f"🔇 ปิดไมค์ทุกคนใน {ch.name} แล้ว เปิดเองไม่ได้")
@@ -137,6 +156,7 @@ async def unmuteall(ctx):
     ch = ctx.author.voice.channel
     mute_locked_channels.discard(ch.id)
     for m in ch.members:
+        if not can_affect(ctx, m): continue
         try: await m.edit(mute=False)
         except: pass
     await ctx.send(f"🔊 เปิดไมค์ทุกคนใน {ch.name} แล้ว")
@@ -148,6 +168,7 @@ async def deafenall(ctx):
     ch = ctx.author.voice.channel
     deafen_locked_channels.add(ch.id)
     for m in ch.members:
+        if not can_affect(ctx, m): continue
         try: await m.edit(deafen=True)
         except: pass
     await ctx.send(f"🔇 ปิดหูฟังทุกคนใน {ch.name} แล้ว")
@@ -159,6 +180,7 @@ async def undeafenall(ctx):
     ch = ctx.author.voice.channel
     deafen_locked_channels.discard(ch.id)
     for m in ch.members:
+        if not can_affect(ctx, m): continue
         try: await m.edit(deafen=False)
         except: pass
     await ctx.send(f"🔊 เปิดหูฟังทุกคนใน {ch.name} แล้ว")
@@ -170,6 +192,7 @@ async def lockall(ctx):
     ch = ctx.author.voice.channel
     mute_locked_channels.add(ch.id); deafen_locked_channels.add(ch.id)
     for m in ch.members:
+        if not can_affect(ctx, m): continue
         try: await m.edit(mute=True, deafen=True)
         except: pass
     await ctx.send(f"🔒 ปิดทั้งไมค์+หูฟังทุกคนใน {ch.name} แล้ว")
@@ -181,6 +204,7 @@ async def unlockall(ctx):
     ch = ctx.author.voice.channel
     mute_locked_channels.discard(ch.id); deafen_locked_channels.discard(ch.id)
     for m in ch.members:
+        if not can_affect(ctx, m): continue
         try: await m.edit(mute=False, deafen=False)
         except: pass
     await ctx.send(f"🔓 เปิดทั้งไมค์+หูฟังทุกคนใน {ch.name} แล้ว")
@@ -191,6 +215,7 @@ async def lockmic(ctx):
     if not ctx.author.voice: return
     ch = ctx.author.voice.channel; mute_locked_channels.add(ch.id)
     for m in ch.members:
+        if not can_affect(ctx, m): continue
         try: await m.edit(mute=True)
         except: pass
     await ctx.send("🔒 ล็อคไมค์อย่างเดียวแล้ว")
@@ -201,6 +226,7 @@ async def unlockmic(ctx):
     if not ctx.author.voice: return
     ch = ctx.author.voice.channel; mute_locked_channels.discard(ch.id)
     for m in ch.members:
+        if not can_affect(ctx, m): continue
         try: await m.edit(mute=False)
         except: pass
     await ctx.send("🔓 ปลดล็อคไมค์แล้ว")
@@ -211,6 +237,7 @@ async def lockdeafen(ctx):
     if not ctx.author.voice: return
     ch = ctx.author.voice.channel; deafen_locked_channels.add(ch.id)
     for m in ch.members:
+        if not can_affect(ctx, m): continue
         try: await m.edit(deafen=True)
         except: pass
     await ctx.send("🔒 ล็อคหูฟังอย่างเดียวแล้ว")
@@ -221,6 +248,7 @@ async def unlockdeafen(ctx):
     if not ctx.author.voice: return
     ch = ctx.author.voice.channel; deafen_locked_channels.discard(ch.id)
     for m in ch.members:
+        if not can_affect(ctx, m): continue
         try: await m.edit(deafen=False)
         except: pass
     await ctx.send("🔓 ปลดล็อคหูฟังแล้ว")
@@ -391,6 +419,7 @@ async def massban(ctx, *members: discord.Member):
 @bot.command()
 async def timeout(ctx, member: discord.Member, duration: str = "10m"):
     if not is_allowed(ctx): await deny(ctx); return
+    if not can_affect(ctx, member): await ctx.send("❌ คนนี้ยศสูงกว่าบอท หมดเวลาไม่ได้ครับ"); return
     try:
         td = parse_duration(duration)
         await member.timeout(td, reason=f"timeout by {ctx.author}")
@@ -456,7 +485,7 @@ async def yesrole(ctx):
 async def help_cmd(ctx):
     if not is_allowed(ctx): await deny(ctx); return
     embed = discord.Embed(title="📋 คำสั่งทั้งหมด - Bot Manage (rreqzn2l)", description="ใช้ในห้อง setup / หลังบ้านได้เลย\nทั้งหมด 48 คำสั่ง | สมาชิกใช้ไม่ได้", color=0x2b2d31)
-    embed.add_field(name="🔇 ปิดไมค์/หูฟัง (ล็อค เปิดเองไม่ได้)", value="!vmute @คน / !vmute ID ปิดไมค์คนเดียว\n!vunmute @คน เปิดไมค์\n!vdeafen @คน ปิดหูฟัง\n!vundeafen @คน เปิดหูฟัง\n!muteall / !unmuteall ปิด/เปิดไมค์ทั้งห้อง\n!deafenall / !undeafenall ปิด/เปิดหูฟังทั้งห้อง\n!lockall / !unlockall ปิด/เปิดทั้งไมค์+หูฟัง\n!lockmic / !unlockmic ล็อคไมค์\n!lockdeafen / !unlockdeafen ล็อคหูฟัง\n!tempMute ปิดไมค์ชั่วคราว\n!mutelist / !mutecheck ดูใครโดนล็อค", inline=False)
+    embed.add_field(name="🔇 ปิดไมค์/หูฟัง (ล็อค เปิดเองไม่ได้)", value="!vmute @คน / !vmute ID ปิดไมค์คนเดียว\n!vunmute @คน เปิดไมค์\n!vdeafen @คน ปิดหูฟัง\n!vundeafen @คน เปิดหูฟัง\n!muteall / !unmuteall ปิด/เปิดไมค์เฉพาะยศต่ำกว่าบอท\n!deafenall / !undeafenall ปิด/เปิดหูฟังทั้งห้อง\n!lockall / !unlockall ปิด/เปิดทั้งไมค์+หูฟัง\n!lockmic / !unlockmic ล็อคไมค์\n!lockdeafen / !unlockdeafen ล็อคหูฟัง\n!tempMute ปิดไมค์ชั่วคราว\n!mutelist / !mutecheck ดูใครโดนล็อค", inline=False)
     embed.add_field(name="🔒 ล็อคห้อง/แชท", value="!lockvc / !unlockvc ล็อคห้องเสียง\n!lock / !unlock ล็อคห้องแชท\n!muteallchat / !unmuteallchat ปิดแชททุกห้อง\n!slowmode / !noslow พิมพ์ช้า\n!slowmodeall พิมพ์ช้าทุกห้อง\n!norole / !yesrole ล็อคยศในห้อง", inline=False)
     embed.add_field(name="↔️ ย้าย/ตัดสาย", value="!move @คน #ห้อง / !moveall #ห้อง ย้าย\n!disconnect @คน ตัดสายคนเดียว\n!disconnectall ตัดสายทุกคน\n!vcinfo ดู Snapshot ห้องเสียง\n!clearallvc ล้างห้องเสียง", inline=False)
     embed.add_field(name="🔨 แบน/เตะ/จัดการคน", value="!ban @คน เหตุผล แบน\n!kick @คน เหตุผล เตะ\n!unban ID ปลดแบน\n!unbanall / !listbans\n!massban แบนหลายคน\n!timeout @คน 7d หมดเวลา 7 วัน / 10m 10 นาที\n!untimeout @คน ปลดหมดเวลา\n!warn @คน เหตุผล เตือน (แบบกล่อง)\n!clear 10 ลบข้อความ 10 ข้อความ\n!purge / !nuke ลบ/ล้างห้อง", inline=False)
