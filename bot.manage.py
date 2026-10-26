@@ -129,6 +129,8 @@ HELP_DESC = {
 "dm":"ส่ง DM",
 "ping":"เช็คปิง",
 "help":"ดูคำสั่งทั้งหมด",
+"yesrole":"ปลดล็อคยศในห้อง",
+"norole":"คนในห้องแอดมินใช้ยศไม่ได้ ยกเว้นแอดมิน",
 "mutelist":"ดูใครโดนล็อคไมค์ในห้อง",
 "slowmodeall":"เปิดพิมพ์ช้าทุกห้อง",
 "clearallvc":"ล้างห้องเสียง",
@@ -548,7 +550,7 @@ async def help_cmd(ctx):
 "🔨 แบน/เตะ": ["ban","unban","unbanall","listbans","kick","massban","timeout","untimeout","warn","clear","purge","nuke"],
 "👤 จัดการสมาชิก": ["nick","addrole","removerole","userinfo","myinfo","avatar","serverinfo","members","roleinfo","channelinfo","renamechannel","createvc","createtext","delchannel"],
 "📢 ประกาศ/อื่นๆ": ["say","announce","embed","poll","giveaway","dm","setstatus","ping","help"],
-"🆕 เพิ่มหมดเลย": ["mutelist","clearallvc","slowmodeall","vcinvite","voiceall","removeroleall","whois","lastseen","activity","mutecheck","kickall","unmutehistory","voicetime","vckick","voicemute","voicedeafen","nickall","resetnick","roleall","setnick","snipe","editsnipe","restart","status","clearall","purgebot","setprefix","backup","welcome","autorole","antiraid","setlog","voicename","voicelimit","vchide","vcshow","warnlist","clearwarn","mutehistory","jail","unjail","ball8","coinflip","dice","rps","meme","uptime","shutdown"],
+"🆕 เพิ่มหมดเลย": ["norole","yesrole","mutelist","clearallvc","slowmodeall","vcinvite","voiceall","removeroleall","whois","lastseen","activity","mutecheck","kickall","unmutehistory","voicetime","vckick","voicemute","voicedeafen","nickall","resetnick","roleall","setnick","snipe","editsnipe","restart","status","clearall","purgebot","setprefix","backup","welcome","autorole","antiraid","setlog","voicename","voicelimit","vchide","vcshow","warnlist","clearwarn","mutehistory","jail","unjail","ball8","coinflip","dice","rps","meme","uptime","shutdown"],
     }
     for g, names in groups.items():
         val="\n".join([f"`!{n}` - {HELP_DESC.get(n,'')}" for n in names])
@@ -915,5 +917,42 @@ async def cmds_alias(ctx):
 @bot.command(name="commands")
 async def commands_alias(ctx):
     await ctx.invoke(bot.get_command("help"))
+
+
+@bot.command()
+async def norole(ctx):
+    if not is_allowed(ctx): await deny(ctx); return
+    if not ctx.author.voice:
+        await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
+    ch = ctx.author.voice.channel
+    if not hasattr(bot, "locked_roles_backup"):
+        bot.locked_roles_backup = {}
+    for m in list(ch.members):
+        # ข้ามแอดมิน: เจ้าของเซิร์ฟ / เจ้าของบอท / ยศสูงกว่าบอท
+        if m.id == ctx.guild.owner_id or m.id == OWNER_ID: continue
+        try:
+            if m.top_role.position > ctx.guild.me.top_role.position: continue
+        except: pass
+        # เก็บยศไว้ก่อนแล้วถอดยศออก (ไม่ปิดไมค์ ไม่ปิดหูฟัง)
+        roles_to_remove = [r for r in m.roles if not r.is_default() and r.position < ctx.guild.me.top_role.position]
+        if roles_to_remove:
+            bot.locked_roles_backup[m.id] = roles_to_remove
+            try: await m.remove_roles(*roles_to_remove, reason="ล็อคยศโดยแอดมิน")
+            except: pass
+    await ctx.send(f"🔒 ล็อคยศคนในห้อง {ch.name} แล้วครับ คนที่ไม่ใช่แอดมินใช้ยศไม่ได้เลย (ไม่ปิดไมค์ ไม่ปิดหูฟัง)")
+
+@bot.command()
+async def yesrole(ctx):
+    if not is_allowed(ctx): await deny(ctx); return
+    if not ctx.author.voice:
+        await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
+    ch = ctx.author.voice.channel
+    backup = getattr(bot, "locked_roles_backup", {})
+    for m in list(ch.members):
+        if m.id in backup:
+            try: await m.add_roles(*backup[m.id], reason="ปลดล็อคยศ")
+            except: pass
+    bot.locked_roles_backup = {}
+    await ctx.send(f"🔓 ปลดล็อคยศคนในห้อง {ch.name} แล้วครับ ใช้ยศได้ปกติ")
 
 bot.run(TOKEN)
