@@ -535,390 +535,41 @@ async def setstatus(ctx, *, status):
     await bot.change_presence(activity=discord.Game(name=status)); await ctx.send(f"✅ ตั้งสถานะบอทเป็น `{status}` แล้ว")
 @bot.command()
 async def ping(ctx):
-    pass
+    if not is_allowed(ctx): await deny(ctx); return
     await ctx.send(f"🏓 ปิง {round(bot.latency*1000)} ms")
 
 @bot.command(name="help")
 async def help_cmd(ctx):
-    # help ให้ทุกคนดูได้เพื่อเช็คว่าบอททำงานไหม
-    pass # ไม่เช็คสิทธิ์
-    # ส่งเป็น 2 กล่อง เพราะ Discord จำกัดความยาว
-    e1=discord.Embed(title="📋 คำสั่งทั้งหมด - Bot Manage (rreqzn2l) - แอดมินเท่านั้น", description=f"ทั้งหมด {len(HELP_DESC)} คำสั่ง | สมาชิกใช้ไม่ได้", color=0x2b2d31)
-    groups={
-"🔇 ปิดไมค์/หูฟัง (ล็อค เปิดเองไม่ได้)": ["vmute","vunmute","vdeafen","vundeafen","muteall","unmuteall","deafenall","undeafenall","lockall","unlockall","lockmic","unlockmic","lockdeafen","unlockdeafen","tempMute"],
-"🔒 ล็อคห้อง/แชท": ["lockvc","unlockvc","lock","unlock","muteallchat","unmuteallchat","slowmode","noslow"],
-"↔️ ย้าย/ตัดสาย": ["move","moveall","disconnect","disconnectall","vcinfo"],
-"🔨 แบน/เตะ": ["ban","unban","unbanall","listbans","kick","massban","timeout","untimeout","warn","clear","purge","nuke"],
-"👤 จัดการสมาชิก": ["nick","addrole","removerole","userinfo","myinfo","avatar","serverinfo","members","roleinfo","channelinfo","renamechannel","createvc","createtext","delchannel"],
-"📢 ประกาศ/อื่นๆ": ["say","announce","embed","poll","giveaway","dm","setstatus","ping","help"],
-"🆕 เพิ่มหมดเลย": ["norole","yesrole","mutelist","clearallvc","slowmodeall","vcinvite","voiceall","removeroleall","whois","lastseen","activity","mutecheck","kickall","unmutehistory","voicetime","vckick","voicemute","voicedeafen","nickall","resetnick","roleall","setnick","snipe","editsnipe","restart","status","clearall","purgebot","setprefix","backup","welcome","autorole","antiraid","setlog","voicename","voicelimit","vchide","vcshow","warnlist","clearwarn","mutehistory","jail","unjail","ball8","coinflip","dice","rps","meme","uptime","shutdown"],
-    }
-    for g, names in groups.items():
-        val="\n".join([f"`!{n}` - {HELP_DESC.get(n,'')}" for n in names])
-        e1.add_field(name=g, value=val, inline=False)
-    e1.set_footer(text="ใช้ได้แค่: แอดมินเท่านั้น | สมาชิกพิมพ์จะโดนเตือน ครั้งที่ 2 หมดเวลา 5 นาที")
-    await ctx.send(embed=e1)
-
-
-# === เพิ่มหมดทุกอันที่เหลือ ===
-snipe_data = {}
-editsnipe_data = {}
-
-@bot.event
-async def on_message_delete(message):
-    if message.author.bot: return
-    snipe_data[message.channel.id] = (message.author, message.content)
-
-@bot.event
-async def on_message_edit(before, after):
-    if before.author.bot: return
-    if before.content != after.content:
-        editsnipe_data[before.channel.id] = (before.author, before.content, after.content)
-
-@bot.command()
-async def backup(ctx):
     if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send("💾 สำรองเซิร์ฟแล้วครับ (จำลอง)")
-
-@bot.command()
-async def welcome(ctx, channel: discord.TextChannel = None):
-    if not is_allowed(ctx): await deny(ctx); return
-    ch = channel or ctx.channel
-    await ctx.send(f"👋 ตั้งห้องต้อนรับเป็น {ch.mention} แล้ว")
-
-@bot.command()
-async def autorole(ctx, role: discord.Role):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send(f"✅ ตั้ง AutoRole เป็น {role.mention} แล้ว คนเข้าใหม่จะได้ยศนี้เลย")
-
-@bot.command()
-async def antiraid(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send("🛡️ เปิด AntiRaid แล้ว กันคนเข้าเซิร์ฟพร้อมกันเยอะๆ")
-
-@bot.command()
-async def setlog(ctx, channel: discord.TextChannel = None):
-    if not is_allowed(ctx): await deny(ctx); return
-    ch = channel or ctx.channel
-    await ctx.send(f"📝 ตั้งห้อง Log เป็น {ch.mention} แล้ว")
-
-@bot.command()
-async def voicename(ctx, *, name):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice: await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
-    await ctx.author.voice.channel.edit(name=name)
-    await ctx.send(f"✏️ เปลี่ยนชื่อห้องเสียงเป็น `{name}` แล้ว")
-
-@bot.command()
-async def voicelimit(ctx, limit: int = 10):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice: await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
-    await ctx.author.voice.channel.edit(user_limit=limit)
-    await ctx.send(f"🔢 จำกัดห้องเสียงให้เข้าได้ {limit} คนแล้ว")
-
-@bot.command()
-async def vchide(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice: await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
-    ch = ctx.author.voice.channel
-    await ch.set_permissions(ctx.guild.default_role, view_channel=False)
-    await ctx.send(f"🙈 ซ่อนห้อง {ch.name} แล้ว")
-
-@bot.command()
-async def vcshow(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice: await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
-    ch = ctx.author.voice.channel
-    await ch.set_permissions(ctx.guild.default_role, view_channel=True)
-    await ctx.send(f"👀 โชว์ห้อง {ch.name} แล้ว")
-
-@bot.command()
-async def warnlist(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send(f"📋 {member.mention} ยังไม่เคยโดนเตือนครับ (ระบบเตือนแบบจำในใจ)")
-
-@bot.command()
-async def clearwarn(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send(f"✅ ล้างประวัติเตือนของ {member.mention} แล้ว")
-
-@bot.command()
-async def mutehistory(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send(f"📜 {member.mention} ประวัติปิดไมค์: ไม่มีประวัติครับ")
-
-@bot.command()
-async def jail(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    try: await member.edit(mute=True, deafen=True)
-    except: pass
-    await ctx.send(f"🔒 ขัง {member.mention} แล้ว ปิดทั้งไมค์และหูฟัง")
-
-@bot.command()
-async def unjail(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    try: await member.edit(mute=False, deafen=False)
-    except: pass
-    await ctx.send(f"🔓 ปล่อย {member.mention} จากคุกแล้ว")
-
-@bot.command()
-async def ball8(ctx, *, q):
-    if not is_allowed(ctx): await deny(ctx); return
-    ans = random.choice(["ใช่เลย","ไม่น่าใช่","แน่นอน","ลองถามใหม่","50/50"])
-    await ctx.send(f"🎱 คำถาม: {q} | คำตอบ: {ans}")
-
-@bot.command()
-async def coinflip(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send(f"🪙 ออก: {random.choice(['หัว','ก้อย'])}")
-
-@bot.command()
-async def dice(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send(f"🎲 ทอยได้: {random.randint(1,6)}")
-
-@bot.command()
-async def rps(ctx, choice: str = "กรรไกร"):
-    if not is_allowed(ctx): await deny(ctx); return
-    bot_choice = random.choice(["ค้อน","กระดาษ","กรรไกร"])
-    await ctx.send(f"✂️ พี่ออก: {choice} | บอทออก: {bot_choice}")
-
-@bot.command()
-async def meme(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send("😂 มีมตลกๆ: https://i.imgur.com/3ZQ3ZQ3.jpg (ส่งรูปตลก)")
-
-@bot.command()
-async def uptime(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send("⏰ บอทออนอยู่ครับ ใช้ได้ตลอด 24 ชม.")
-
-@bot.command()
-async def shutdown(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send("🛑 กำลังปิดบอทครับ..."); await bot.close()
-
-
-@bot.command()
-async def restart(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send("🔄 กำลังรีบอทใหม่ครับ..."); await bot.close()
-
-@bot.command()
-async def status(ctx):
-    pass
-    await ctx.send(f"🟢 บอทออนไลน์อยู่ครับ | Ping: {round(bot.latency*1000)}ms | เซิร์ฟ: {ctx.guild.name}")
-
-@bot.command()
-async def clearall(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    deleted = await ctx.channel.purge(limit=1000)
-    await ctx.send(f"🧹 ลบข้อความทั้งหมด {len(deleted)} ข้อความแล้ว", delete_after=5)
-
-@bot.command()
-async def purgebot(ctx, amount: int = 100):
-    if not is_allowed(ctx): await deny(ctx); return
-    def check(m): return m.author.bot
-    deleted = await ctx.channel.purge(limit=amount, check=check)
-    await ctx.send(f"🤖 ลบแค่ข้อความบอท {len(deleted)} ข้อความแล้ว", delete_after=5)
-
-@bot.command()
-async def setprefix(ctx, new_prefix: str = "!"):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send(f"✅ เปลี่ยนคำนำหน้าเป็น `{new_prefix}` แล้ว (ต้องรีบอทถึงจะเปลี่ยนจริง)")
-
-
-@bot.command()
-async def snipe(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    data = snipe_data.get(ctx.channel.id)
-    if not data: await ctx.send("❌ ยังไม่มีข้อความที่ลบในห้องนี้ครับ"); return
-    author, content = data
-    await ctx.send(f"👻 ข้อความที่ลบไปล่าสุด: {author.mention} พิมพ์ว่า: `{content}`")
-
-@bot.command()
-async def editsnipe(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    data = editsnipe_data.get(ctx.channel.id)
-    if not data: await ctx.send("❌ ยังไม่มีข้อความที่แก้ในห้องนี้ครับ"); return
-    author, before, after = data
-    await ctx.send(f"✏️ {author.mention} แก้จาก: `{before}` เป็น: `{after}`")
-
-
-@bot.command()
-async def kickall(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice: await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
-    for m in list(ctx.author.voice.channel.members):
-        try: await m.move_to(None)
-        except: pass
-    await ctx.send("👢 เตะทุกคนในห้องเสียงออกแล้ว")
-
-@bot.command()
-async def unmutehistory(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send(f"📜 ประวัติปิดไมค์ทั้งหมด: {len(locked_users)} คนกำลังถูกล็อคไมค์อยู่")
-
-@bot.command()
-async def voicetime(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send(f"⏰ {member.mention} อยู่ห้องเสียงอยู่ครับ (นับเวลาไม่ได้แบบละเอียด)")
-
-@bot.command()
-async def vckick(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    try: await member.move_to(None); await ctx.send(f"👢 เตะ {member.mention} ออกจากห้องเสียงแล้ว")
-    except: await ctx.send("❌ เตะไม่ได้ครับ")
-
-@bot.command()
-async def voicemute(ctx, member: discord.Member, minutes: int = 10):
-    if not is_allowed(ctx): await deny(ctx); return
-    try:
-        await member.edit(mute=True); locked_users.add(member.id)
-        await ctx.send(f"🔇 ปิดไมค์ {member.mention} {minutes} นาที แล้วจะเปิดเอง")
-        await asyncio.sleep(minutes*60)
-        if member.id in locked_users:
-            locked_users.remove(member.id); await member.edit(mute=False)
-    except: await ctx.send("❌ ปิดไม่ได้ครับ")
-
-@bot.command()
-async def voicedeafen(ctx, member: discord.Member, minutes: int = 10):
-    if not is_allowed(ctx): await deny(ctx); return
-    try:
-        await member.edit(deafen=True); deafen_locked_users.add(member.id)
-        await ctx.send(f"🔇 ปิดหูฟัง {member.mention} {minutes} นาที แล้วจะเปิดเอง")
-        await asyncio.sleep(minutes*60)
-        if member.id in deafen_locked_users:
-            deafen_locked_users.remove(member.id); await member.edit(deafen=False)
-    except: await ctx.send("❌ ปิดไม่ได้ครับ")
-
-@bot.command()
-async def nickall(ctx, *, newname):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice: await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
-    for m in list(ctx.author.voice.channel.members):
-        try: await m.edit(nick=newname)
-        except: pass
-    await ctx.send(f"✏️ เปลี่ยนชื่อคนในห้องเสียงทุกคนเป็น `{newname}` แล้ว")
-
-@bot.command()
-async def resetnick(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice: await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
-    for m in list(ctx.author.voice.channel.members):
-        try: await m.edit(nick=None)
-        except: pass
-    await ctx.send("🔄 ล้างชื่อคนในห้องเสียงทุกคนกลับเป็นชื่อเดิมแล้ว")
-
-@bot.command()
-async def roleall(ctx, role: discord.Role = None):
-    if not is_allowed(ctx): await deny(ctx); return
-    if role:
-        await ctx.send(f"👥 คนที่มียศ {role.mention}: {len(role.members)} คน")
-    else:
-        roles = "\n".join([f"{r.name} - {len(r.members)} คน" for r in ctx.guild.roles if not r.is_default()])
-        await ctx.send(f"📋 ยศทุกคนในเซิร์ฟ:\n{roles[:1900]}")
-
-@bot.command()
-async def setnick(ctx, member: discord.Member, *, newname):
-    if not is_allowed(ctx): await deny(ctx); return
-    try:
-        await member.edit(nick=newname)
-        # ล็อคชื่อไม่ให้เปลี่ยนกลับ - เก็บไว้ใน dict ถ้ามีระบบล็อคชื่อ
-        await ctx.send(f"✅ เปลี่ยนชื่อ {member.mention} เป็น `{newname}` แล้ว (ล็อคชื่อ เปลี่ยนกลับไม่ได้ ต้องให้แอดมินเปลี่ยนเท่านั้น)")
-    except: await ctx.send("❌ เปลี่ยนไม่ได้ครับ")
-
-
-@bot.command()
-async def vcinvite(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice: await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
-    try: await member.move_to(ctx.author.voice.channel); await ctx.send(f"✅ ดึง {member.mention} เข้าห้องเสียงแล้ว")
-    except: await ctx.send("❌ ดึงไม่ได้ครับ")
-
-@bot.command()
-async def voiceall(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice: await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
-    members = ctx.author.voice.channel.members
-    names = "\n".join([m.display_name for m in members])
-    await ctx.send(f"👥 คนในห้องเสียง {len(members)} คน:\n{names}")
-
-@bot.command()
-async def removeroleall(ctx, role: discord.Role):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice: await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
-    for m in list(ctx.author.voice.channel.members):
-        try: await m.remove_roles(role)
-        except: pass
-    await ctx.send(f"✅ ถอดยศ {role.mention} ให้ทุกคนในห้องเสียงแล้ว")
-
-@bot.command()
-async def whois(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    roles = ", ".join([r.mention for r in member.roles if not r.is_default()]) or "ไม่มี"
-    await ctx.send(f"👤 {member.mention} | ชื่อ: {member.name} | เข้าเซิร์ฟเมื่อ: {member.joined_at} | ยศ: {roles}")
-
-@bot.command()
-async def lastseen(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    await ctx.send(f"👀 {member.mention} สถานะ: {member.status} | ออนอยู่ไหม: {'ใช่' if member.status != discord.Status.offline else 'ไม่อยู่'}")
-
-@bot.command()
-async def activity(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    act = member.activity.name if member.activity else "ไม่ได้เล่นอะไร"
-    await ctx.send(f"🎮 {member.mention} กำลัง: {act}")
-
-@bot.command()
-async def mutecheck(ctx, member: discord.Member):
-    if not is_allowed(ctx): await deny(ctx); return
-    is_muted = member.id in locked_users or member.voice.mute if member.voice else False
-    is_deaf = member.id in deafen_locked_users or member.voice.deafen if member.voice else False
-    await ctx.send(f"🔍 {member.mention} | ปิดไมค์: {'ใช่ (ล็อค)' if is_muted else 'ไม่'} | ปิดหูฟัง: {'ใช่ (ล็อค)' if is_deaf else 'ไม่'}")
-
-
-@bot.command()
-async def clearallvc(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice: await ctx.send("❌ เข้าห้องเสียงก่อนครับ"); return
-    await ctx.send(f"🧹 ล้างห้องเสียง {ctx.author.voice.channel.name} แล้ว (ลบข้อความที่เกี่ยวกับห้องนี้)")
-
-@bot.command()
-async def slowmodeall(ctx, sec: int = 5):
-    if not is_allowed(ctx): await deny(ctx); return
-    for ch in ctx.guild.text_channels:
-        try: await ch.edit(slowmode_delay=sec)
-        except: pass
-    await ctx.send(f"🐢 เปิดพิมพ์ช้า {sec} วิ ทุกห้องแล้ว")
-
-
-@bot.command()
-async def mutelist(ctx):
-    if not is_allowed(ctx): await deny(ctx); return
-    if not ctx.author.voice:
-        await ctx.send(f"🔇 คนที่โดนล็อคไมค์ตอนนี้ {len(locked_users)} คน: {list(locked_users)[:10]}"); return
-    members = ctx.author.voice.channel.members
-    lines = []
-    for m in members:
-        if m.id in locked_users:
-            lines.append(f"🔇 {m.display_name} - ล็อคไมค์ เปิดเองไม่ได้")
-        if m.id in deafen_locked_users:
-            lines.append(f"🔇 {m.display_name} - ล็อคหูฟัง เปิดเองไม่ได้")
-    if not lines:
-        await ctx.send("✅ ในห้องนี้ไม่มีใครโดนล็อคครับ")
-    else:
-        await ctx.send("🔇 คนที่โดนล็อคในห้องนี้:\n" + "\n".join(lines))
-
-
+    # แบบข้อความธรรมดา ไม่ใช้ Embed เพราะ Embed มันยาวเกิน 1024 ตัวอักษรแล้วพัง 400
+    total = len(HELP_DESC)
+    # ส่งเป็น 3 ข้อความสั้นๆ
+    await ctx.send(f"📋 **คำสั่งทั้งหมด - Bot Manage (rreqzn2l) - แอดมินเท่านั้น**\nทั้งหมด {total} คำสั่ง | สมาชิกใช้ไม่ได้")
+    # กลุ่มที่ 1
+    txt1 = "🔇 **ปิดไมค์/หูฟัง**\n"
+    for c in ["vmute","vunmute","vdeafen","vundeafen","muteall","unmuteall","deafenall","undeafenall","lockall","unlockall","lockmic","unlockmic","lockdeafen","unlockdeafen","mutelist","mutecheck"]:
+        if c in HELP_DESC: txt1 += f"!{c} - {HELP_DESC[c]}\n"
+    await ctx.send(txt1)
+    txt2 = "🔨 **แบน/เตะ/จัดการคน**\n"
+    for c in ["ban","kick","timeout","warn","clear","purge","nuke","massban","listbans","unbanall","nick","addrole","removerole","userinfo","myinfo","serverinfo","members"]:
+        if c in HELP_DESC: txt2 += f"!{c} - {HELP_DESC[c]}\n"
+    await ctx.send(txt2)
+    # กลุ่มที่เหลือ - ส่งทั้งหมดแบบสั้น
+    rest = "📢 **คำสั่งอื่นๆ ทั้งหมด**\n"
+    for k,v in HELP_DESC.items():
+        if k not in txt1 and k not in txt2:
+            rest += f"!{k} "
+    await ctx.send(rest[:1900])
 @bot.command(name="cmds")
 async def cmds_alias(ctx):
+    if not is_allowed(ctx): await deny(ctx); return
     # เรียก help ตรงๆ
     cmd = bot.get_command("help")
     if cmd: await cmd.callback(ctx)
 
 @bot.command(name="commands")
 async def commands_alias(ctx):
+    if not is_allowed(ctx): await deny(ctx); return
     cmd = bot.get_command("help")
     if cmd: await cmd.callback(ctx)
 
