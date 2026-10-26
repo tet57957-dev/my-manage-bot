@@ -913,11 +913,14 @@ async def mutelist(ctx):
 
 @bot.command(name="cmds")
 async def cmds_alias(ctx):
-    await ctx.invoke(bot.get_command("help"))
+    # เรียก help ตรงๆ
+    cmd = bot.get_command("help")
+    if cmd: await cmd.callback(ctx)
 
 @bot.command(name="commands")
 async def commands_alias(ctx):
-    await ctx.invoke(bot.get_command("help"))
+    cmd = bot.get_command("help")
+    if cmd: await cmd.callback(ctx)
 
 
 @bot.command()
