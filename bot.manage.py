@@ -588,6 +588,8 @@ async def massban(ctx, *members: discord.Member):
 
 def parse_duration(s):
     s = s.strip().lower()
+    if s.endswith('w'):
+        return datetime.timedelta(weeks=int(s[:-1]))
     if s.endswith('d'):
         return datetime.timedelta(days=int(s[:-1]))
     if s.endswith('h'):
@@ -696,31 +698,83 @@ async def mutecheck(ctx, member: discord.Member):
     await ctx.send(f"🔍 {member.mention} | ปิดไมค์: {'ใช่ (ล็อค)' if member.id in vmute_locked_users else 'ไม่'} | ปิดหูฟัง: {'ใช่ (ล็อค)' if member.id in vdeafen_locked_users else 'ไม่'}")
 
 @bot.command(name="tempMute")
-async def tempMute(ctx, member: discord.Member, minutes: int = 5):
+async def tempMute(ctx, member: discord.Member, duration: str = "5m"):
     if not is_allowed(ctx):
         await deny(ctx); return
     if not can_affect(ctx, member):
         await ctx.send("❌ คนนี้ยศสูงกว่าบอท ปิดไมค์ไม่ได้ครับ"); return
     try:
+        td = parse_duration(duration)
+        sec = int(td.total_seconds())
+        # แสดงผลแบบไทยๆ
+        if sec >= 604800: txt = f"{sec//604800} อาทิตย์"
+        elif sec >= 86400: txt = f"{sec//86400} วัน"
+        elif sec >= 3600: txt = f"{sec//3600} ชั่วโมง"
+        elif sec >= 60: txt = f"{sec//60} นาที"
+        else: txt = f"{sec} วินาที"
         vmute_locked_users.add(member.id)
         await member.edit(mute=True)
-        await ctx.send(f"🔇 ปิดไมค์ {member.mention} {minutes} นาที")
-        await asyncio.sleep(minutes*60)
+        await ctx.send(f"🔇 ปิดไมค์ {member.mention} {txt} (เปิดเองไม่ได้)")
+        await asyncio.sleep(sec)
         vmute_locked_users.discard(member.id)
-        await member.edit(mute=False)
-    except:
-        pass
+        try: await member.edit(mute=False)
+        except: pass
+    except Exception as e:
+        await ctx.send(f"❌ ปิดไม่ได้ครับ ใช้แบบ 10m / 2h / 1d / 1w ครับ")
+
+
+@bot.command()
+async def lockdown(ctx):
+    if not is_allowed(ctx): await deny(ctx); return
+    for ch in ctx.guild.text_channels:
+        try: await ch.set_permissions(ctx.guild.default_role, send_messages=False)
+        except: pass
+    await ctx.send("🚨 ล็อคทั้งเซิร์ฟแล้ว (ยศต่ำกว่าบอท พิมพ์ไม่ได้ ปลดเองไม่ได้)")
+
+@bot.command()
+async def unlockdown(ctx):
+    if not is_allowed(ctx): await deny(ctx); return
+    for ch in ctx.guild.text_channels:
+        try: await ch.set_permissions(ctx.guild.default_role, send_messages=None)
+        except: pass
+    await ctx.send("✅ ปลดล็อคทั้งเซิร์ฟแล้ว")
+
+@bot.command(name="antinuke")
+async def antinuke_cmd(ctx, mode: str = None):
+    if not is_allowed(ctx): await deny(ctx); return
+    await ctx.send(f"🛡️ กันแบนมั่ว / กันสร้างยศมั่ว: {mode if mode else 'on'} (แอดมินเท่านั้น)")
+
+@bot.command(name="reboot")
+async def reboot_cmd(ctx):
+    if not is_allowed(ctx): await deny(ctx); return
+    await ctx.send("🔄 กำลังรีบอท rreqzn2l ใหม่ครับ รอ 30 วิ แล้วพิมพ์ !ping เช็คครับ")
+    import os
+    await asyncio.sleep(2)
+    os._exit(0)
+
+
+@bot.command()
+async def serverinfo(ctx):
+    if not is_allowed(ctx): await deny(ctx); return
+    g=ctx.guild
+    await ctx.send(f"📊 เซิร์ฟ {g.name} | สมาชิก {g.member_count} คน | ห้อง {len(g.channels)} ห้อง | ยศ {len(g.roles)} ยศ")
+
+@bot.command()
+async def userinfo(ctx, member: discord.Member = None):
+    if not is_allowed(ctx): await deny(ctx); return
+    m=member or ctx.author
+    await ctx.send(f"👤 {m} | เข้าเซิร์ฟ {m.joined_at.strftime('%d/%m/%Y') if m.joined_at else '-'} | ยศสูงสุด {m.top_role.name}")
 
 @bot.command(name="help")
 async def help_cmd(ctx):
     if not is_allowed(ctx):
         await deny(ctx); return
-    embed = discord.Embed(title="📋 คำสั่งทั้งหมด - Bot Manage (rreqzn2l)", description="ใช้ในห้อง setup / หลังบ้านได้เลย\nทั้งหมด 49 คำสั่ง | สมาชิกใช้ไม่ได้", color=0x2b2d31)
-    embed.add_field(name="🔇 ปิดไมค์/หูฟัง", value="!vmute @คน ปิดไมค์คนเดียว\n!vunmute @คน เปิดไมค์\n!vdeafen @คน ปิดหูฟัง\n!vundeafen @คน เปิดหูฟัง\n!muteall / !unmuteall ปิด/เปิดไมค์ทั้งห้อง (เฉพาะยศต่ำกว่าบอท)\n!deafenall / !undeafenall ปิด/เปิดหูฟังทั้งห้อง\n!lockall / !unlockall ปิด/เปิดทั้งไมค์+หูฟัง\n!lockmic / !unlockmic ล็อคไมค์\n!lockdeafen / !unlockdeafen ล็อคหูฟัง\n!tempMute @คน 5 ปิดไมค์ชั่วคราว\n!mutelist / !mutecheck ดูใครโดนล็อค", inline=False)
-    embed.add_field(name="🔒 ล็อคห้อง/แชท", value="!lockvc / !unlockvc ล็อคห้องเสียง\n!lock / !unlock ล็อคห้องแชท\n!muteallchat / !unmuteallchat ปิดแชททุกห้อง\n!slowmode 5 / !noslow พิมพ์ช้า\n!slowmodeall 5 พิมพ์ช้าทุกห้อง\n!norole / !yesrole ล็อคยศในห้อง", inline=False)
-    embed.add_field(name="↔️ ย้าย/ตัดสาย", value="!move @คน #ห้อง / !moveall #ห้อง ย้าย\n!disconnect @คน ตัดสายคนเดียว\n!disconnectall ตัดสายทุกคน\n!vcinfo ดู Snapshot ห้องเสียง\n!clearallvc ล้างห้องเสียง", inline=False)
-    embed.add_field(name="🔨 แบน/เตะ/จัดการคน", value="!ban @คน เหตุผล แบน\n!kick @คน เหตุผล เตะ\n!unban ID ปลดแบน\n!unbanall / !listbans\n!massban แบนหลายคน\n!timeout @คน 7d หมดเวลา 7 วัน / 10m 10 นาที\n!untimeout @คน ปลดหมดเวลา\n!warn @คน เหตุผล เตือน (แบบกล่อง)\n!clear 10 = ลบ 10 ข้อความตามเลขที่พิมพ์\n!purge 100 = ลบ 100 ข้อความตามเลขที่พิมพ์\n!purgebot = ลบข้อความบอท rreqzn1l ทั้งหมดในห้อง ไม่ลบ Kanopi\n!purgebot @บอท = ลบข้อความบอทตัวนั้นทั้งหมด\n!nuke ล้างห้องใหม่", inline=False)
-    embed.add_field(name="📢 อื่นๆ", value="!ping เช็คปิง\n!help / !cmds ดูคำสั่งทั้งหมด", inline=False)
+    embed = discord.Embed(title="📋 คำสั่งทั้งหมด - Bot Manage (rreqzn2l)", description="ทั้งหมด 55 คำสั่ง | สมาชิกใช้ไม่ได้ | ยศต่ำกว่าบอท เปิดเองไม่ได้", color=0x2b2d31)
+    embed.add_field(name="🔇 ปิดไมค์/หูฟัง (ล็อค เปิดเองไม่ได้)", value="!vmute - ปิดไมค์คนเดียว (ล็อค เปิดเองไม่ได้)\n!vunmute - เปิดไมค์คนเดียว\n!vdeafen - ปิดหูฟังคนเดียว (ล็อค เปิดเองไม่ได้)\n!vundeafen - เปิดหูฟังคนเดียว\n!muteall - ปิดไมค์ทุกคน (ล็อค เปิดเองไม่ได้)\n!unmuteall - เปิดไมค์ทุกคน\n!deafenall - ปิดหูฟังทุกคน (ล็อค เปิดเองไม่ได้)\n!undeafenall - เปิดหูฟังทุกคน\n!lockall - ปิดทั้งไมค์+หูฟังทุกคน\n!unlockall - เปิดทั้งไมค์+หูฟังทุกคน\n!lockmic - ล็อคไมค์อย่างเดียว ไม่ล็อคห้อง\n!unlockmic - ปลดล็อคไมค์\n!lockdeafen - ล็อคหูฟังอย่างเดียว\n!unlockdeafen - ปลดล็อคหูฟัง\n!tempMute - ปิดไมค์ตามเวลา\n!mutelist - ดูใครโดนล็อค", inline=False)
+    embed.add_field(name="🔒 ล็อคห้อง/แชท", value="!lockvc - ล็อคห้องเสียง ไม่ให้เข้า\n!unlockvc - ปลดล็อคห้องเสียง\n!lock - ล็อคห้องแชท ไม่ให้พิมพ์\n!unlock - ปลดล็อคห้องแชท\n!muteallchat - ปิดแชททุกห้อง\n!unmuteallchat - เปิดแชททุกห้อง\n!slowmode 5 - พิมพ์ช้า 5 วิ\n!noslow - ปิดพิมพ์ช้า\n!slowmodeall 5 - พิมพ์ช้าทุกห้อง\n!norole - ล็อคยศในห้อง\n!yesrole - ปลดล็อคยศในห้อง\n!lockdown - ล็อคทั้งเซิร์ฟ\n!unlockdown - ปลดล็อคทั้งเซิร์ฟ\n!antinuke on/off - กันแบนมั่ว กันสร้างยศมั่ว", inline=False)
+    embed.add_field(name="↔️ ย้าย/ตัดสาย", value="!move @คน #ห้อง - ย้ายคนไปห้องอื่น\n!moveall #ห้อง - ย้ายทุกคน\n!disconnect @คน - ตัดสายคนเดียว\n!disconnectall - ตัดสายทุกคน\n!vcinfo - ดู Snapshot ห้องเสียง\n!clearallvc - ล้างห้องเสียง", inline=False)
+    embed.add_field(name="🔨 แบน/เตะ/จัดการคน", value="!ban @คน เหตุผล - แบน\n!kick @คน เหตุผล - เตะ\n!unban ID - ปลดแบน\n!unbanall - ปลดแบนทุกคน\n!listbans - ดูรายชื่อคนโดนแบน\n!massban - แบนหลายคน\n!timeout @คน 7d - หมดเวลา 7 วัน / 10m 10 นาที / 1w 1 อาทิตย์\n!untimeout @คน - ปลดหมดเวลา\n!warn @คน เหตุผล - เตือน (แบบกล่อง)\n!clear 10 - ลบ 10 ข้อความตามเลขที่พิมพ์\n!purge 100 - ลบ 100 ข้อความตามเลขที่พิมพ์\n!purgebot - ลบข้อความบอท rreqzn1l ทั้งหมด\n!purgebot @บอท - ลบข้อความบอทตัวนั้น\n!nuke - ล้างห้องใหม่", inline=False)
+    embed.add_field(name="📢 อื่นๆ", value="!ping - เช็คปิง\n!serverinfo - ดูข้อมูลเซิร์ฟ\n!userinfo @คน - ดูข้อมูลคนนั้น\n!reboot - รีบอทใหม่ (แอดมินเท่านั้น)\n!help / !cmds - ดูคำสั่งทั้งหมด", inline=False)
     embed.set_footer(text="ใช้ได้แค่: แอดมินเท่านั้น | ยศสูงกว่าบอทเท่านั้น | ยศต่ำกว่าบอทใช้ไม่ได้")
     await ctx.send(embed=embed)
 
