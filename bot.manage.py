@@ -774,6 +774,7 @@ async def help_cmd(ctx):
     embed.add_field(name="🔒 ล็อคห้อง/แชท", value="!lockvc - ล็อคห้องเสียง ไม่ให้เข้า\n!unlockvc - ปลดล็อคห้องเสียง\n!lock - ล็อคห้องแชท ไม่ให้พิมพ์\n!unlock - ปลดล็อคห้องแชท\n!muteallchat - ปิดแชททุกห้อง\n!unmuteallchat - เปิดแชททุกห้อง\n!slowmode 5 - พิมพ์ช้า 5 วิ\n!noslow - ปิดพิมพ์ช้า\n!slowmodeall 5 - พิมพ์ช้าทุกห้อง\n!norole - ล็อคยศในห้อง\n!yesrole - ปลดล็อคยศในห้อง\n!lockdown - ล็อคทั้งเซิร์ฟ\n!unlockdown - ปลดล็อคทั้งเซิร์ฟ\n!antinuke on/off - กันแบนมั่ว กันสร้างยศมั่ว", inline=False)
     embed.add_field(name="↔️ ย้าย/ตัดสาย", value="!move @คน #ห้อง - ย้ายคนไปห้องอื่น\n!moveall #ห้อง - ย้ายทุกคน\n!disconnect @คน - ตัดสายคนเดียว\n!disconnectall - ตัดสายทุกคน\n!vcinfo - ดู Snapshot ห้องเสียง\n!clearallvc - ล้างห้องเสียง", inline=False)
     embed.add_field(name="🔨 แบน/เตะ/จัดการคน", value="!ban @คน เหตุผล - แบน\n!kick @คน เหตุผล - เตะ\n!unban ID - ปลดแบน\n!unbanall - ปลดแบนทุกคน\n!listbans - ดูรายชื่อคนโดนแบน\n!massban - แบนหลายคน\n!timeout @คน 7d - หมดเวลา 7 วัน / 10m 10 นาที / 1w 1 อาทิตย์\n!untimeout @คน - ปลดหมดเวลา\n!warn @คน เหตุผล - เตือน (แบบกล่อง)\n!clear 10 - ลบ 10 ข้อความตามเลขที่พิมพ์\n!purge 100 - ลบ 100 ข้อความตามเลขที่พิมพ์\n!purgebot - ลบข้อความบอท rreqzn1l ทั้งหมด\n!purgebot @บอท - ลบข้อความบอทตัวนั้น\n!nuke - ล้างห้องใหม่", inline=False)
+    embed.add_field(name="🔒 ล็อกยศฉุกเฉิน (ตอนบอท 1 ดับ)", value="!lockroles - ล็อกยศทั้งหมด ยศต่ำกว่าบอทใช้ไม่ได้เลย แม้เปิดผู้ดูแล\n!unlockroles - ปลดล็อกยศ กลับมาใช้ได้ปกติ", inline=False)
     embed.add_field(name="📢 อื่นๆ", value="!ping - เช็คปิง\n!serverinfo - ดูข้อมูลเซิร์ฟ\n!userinfo @คน - ดูข้อมูลคนนั้น\n!reboot - รีบอทใหม่ (แอดมินเท่านั้น)\n!help / !cmds - ดูคำสั่งทั้งหมด", inline=False)
     embed.set_footer(text="ใช้ได้แค่: แอดมินเท่านั้น | ยศสูงกว่าบอทเท่านั้น | ยศต่ำกว่าบอทใช้ไม่ได้")
     await ctx.send(embed=embed)
@@ -793,5 +794,66 @@ async def commands_alias(ctx):
     cmd = bot.get_command("help")
     if cmd:
         await cmd.callback(ctx)
+
+# === ระบบล็อกยศฉุกเฉิน - ใช้ตอนบอทตัวที่ 1 ดับ ===
+ROLES_LOCKED = False
+ROLES_BACKUP = {}
+
+@bot.command(name="lockroles")
+async def lockroles_cmd(ctx):
+    global ROLES_LOCKED, ROLES_BACKUP
+    if not is_allowed(ctx):
+        await deny(ctx); return
+    if ROLES_LOCKED:
+        await ctx.send("🔒 ล็อกยศอยู่แล้วครับ"); return
+    ROLES_LOCKED = True
+    ROLES_BACKUP = {}
+    bot_top = ctx.guild.me.top_role
+    locked = 0
+    for r in ctx.guild.roles:
+        if r.is_default() or r.is_bot_managed() or r.position >= bot_top.position:
+            continue
+        ROLES_BACKUP[r.id] = r.permissions.value
+        try:
+            await r.edit(permissions=discord.Permissions.none(), reason="ล็อกยศฉุกเฉิน - บอท1 ดับ")
+            locked += 1
+        except: pass
+    await ctx.send(f"🔒 ล็อกยศทั้งหมดแล้ว {locked} ยศ! ใครยศต่ำกว่าบอท ใช้สิทธิ์อะไรไม่ได้เลย แม้เปิดผู้ดูแลก็ตาม | พิมพ์ !unlockroles เพื่อปลดล็อก")
+
+@bot.command(name="unlockroles")
+async def unlockroles_cmd(ctx):
+    global ROLES_LOCKED, ROLES_BACKUP
+    if not is_allowed(ctx):
+        await deny(ctx); return
+    if not ROLES_LOCKED:
+        await ctx.send("🔓 ไม่ได้ล็อกอยู่ครับ"); return
+    ROLES_LOCKED = False
+    restored = 0
+    for r in ctx.guild.roles:
+        if r.id in ROLES_BACKUP:
+            try:
+                await r.edit(permissions=discord.Permissions(ROLES_BACKUP[r.id]), reason="ปลดล็อกยศ")
+                restored += 1
+            except: pass
+    ROLES_BACKUP = {}
+    await ctx.send(f"🔓 ปลดล็อกยศแล้ว {restored} ยศ! กลับมาใช้งานได้ปกติครับ")
+
+@bot.event
+async def on_member_update_lock(before, after):
+    if not ROLES_LOCKED: return
+    if len(before.roles) == len(after.roles): return
+    try:
+        async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.member_role_update):
+            culprit = entry.user
+            if culprit.id == bot.user.id: return
+            if culprit.id == after.guild.owner_id: return
+            if len(after.roles) > len(before.roles):
+                added = [r for r in after.roles if r not in before.roles]
+                try: await after.remove_roles(*added, reason="ล็อกยศอยู่")
+                except: pass
+                try: await after.timeout(datetime.timedelta(minutes=10), reason="ใส่ยศตอนล็อก")
+                except: pass
+            break
+    except: pass
 
 bot.run(TOKEN)
