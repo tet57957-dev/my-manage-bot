@@ -78,10 +78,12 @@ async def deny(ctx):
     uid = ctx.author.id
     cnt = no_perm_counts.get(uid, 0) + 1
     no_perm_counts[uid] = cnt
-    await ctx.send('❌ คุณไม่มีสิทธิ์ใช้คำสั่งนี้ ต้องเป็นแอดมินเท่านั้น')
+    await ctx.send('❌ คุณไม่มีสิทธิ์ใช้คำสั่งนี้')
     if cnt >= 2:
         try:
-            await ctx.author.timeout(datetime.timedelta(minutes=5), reason="พิมพ์คำสั่งที่ไม่มีสิทธิ์ซ้ำ")
+            import random
+            mins = random.choice([5, 10])
+            await ctx.author.timeout(datetime.timedelta(minutes=mins), reason="พิมพ์คำสั่งที่ไม่มีสิทธิ์ซ้ำ")
         except:
             pass
         no_perm_counts[uid] = 0
@@ -557,7 +559,7 @@ async def ban(ctx, member: discord.Member, *, reason=""):
         await ctx.send("❌ คนนี้ยศสูงกว่าบอท แบนไม่ได้ครับ"); return
     try:
         await ctx.guild.ban(member, reason=reason)
-        await ctx.send(f"🔨 แบน {member.mention} แล้ว")
+        await ctx.send(f"🔨 แบน {member.mention} แล้ว | โดย {ctx.author.display_name} | เวลา <t:{int(__import__('time').time())}:F> | ใช้คำสั่ง !ban")
     except:
         await ctx.send("❌ แบนไม่ได้ครับ")
 
@@ -638,14 +640,24 @@ async def timeout(ctx, member: discord.Member, duration: str = "10m"):
     if not is_allowed(ctx):
         await deny(ctx); return
     if not can_affect(ctx, member):
-        await ctx.send("❌ คนนี้ยศสูงกว่าบอท หมดเวลาไม่ได้ครับ"); return
+        await ctx.send("❌ คนนี้ยศสูงกว่าบอท หมดเวลาไม่ได้ครับ")
+        return
     try:
-        td = parse_duration(duration)
-        await member.timeout(td, reason=f"timeout by {ctx.author}")
-        await ctx.send(f"⏱️ หมดเวลา {member.mention} {duration} แล้ว")
+        import datetime as dt
+        # parse duration like 10m, 1h, 1d
+        mins = 10
+        if duration.endswith("m"):
+            mins = int(duration[:-1])
+        elif duration.endswith("h"):
+            mins = int(duration[:-1])*60
+        elif duration.endswith("d"):
+            mins = int(duration[:-1])*1440
+        until = dt.datetime.now() + dt.timedelta(minutes=mins)
+        await member.timeout(dt.timedelta(minutes=mins), reason=f"โดย {ctx.author.display_name}")
+        await ctx.send(f"⏰ หมดเวลา {member.mention} {mins} นาที | โดย {ctx.author.display_name} | หมดอีกที <t:{int(until.timestamp())}:R> เวลา <t:{int(until.timestamp())}:F> | พิมพ์ได้อีกครั้งตอนนั้น")
     except Exception as e:
         await ctx.send(f"❌ หมดเวลาไม่ได้ครับ {e}")
-
+        return
 @bot.command()
 async def untimeout(ctx, member: discord.Member):
     if not is_allowed(ctx):
